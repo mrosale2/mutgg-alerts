@@ -1,26 +1,24 @@
-# MUT.GG Auction Alerts
+# mut.gg auction alerts
 
-A free bookmarklet that watches [mut.gg](https://www.mut.gg) for live auctions on selected players and pushes alerts to Discord (which pushes to your phone) when an auction matching your criteria appears.
-
-> **Standalone project.** This repo is for the mut.gg alert tool only. It is **not** related to other MUT pricing/sniping tools — different site, different APIs, different delivery model. It uses only mut.gg's public, anonymous endpoints.
+bookmarklet that watches [mut.gg](https://www.mut.gg) for live auctions on selected players and pushes alerts to Discord (which pushes to your phone) when an auction matching your criteria appears
 
 ---
 
-## What it does
+## what it does
 
 - **Watch a player + program combo** — e.g., "Tyreek Hill, Sugar Rush, PC, alert when BIN ≤ 400,000 coins."
-- **Polls mut.gg every ~2.5 minutes** while a mut.gg tab is open in your browser.
+- **Polls mut.gg every ~2.5 minutes** while a **mut.gg tab is open in your browser.** -- update needed
 - **Sends a Discord webhook ping** when a matching new listing appears. Discord on your phone handles the push notification — no extra app required if you already use Discord.
-- **Falls back to / supplements with** in-tab browser notifications, audio beep, and [ntfy.sh](https://ntfy.sh) if you'd rather not use Discord.
+- **Falls back to / supplements with** in-tab browser notifications, audio beep, and [ntfy.sh](https://ntfy.sh) if you'd rather not use Discord. tbh I've never used the app before but lots of good reviews
 
 ---
 
 ## Install (end user)
 
-1. Open `install.html` in your browser (double-click the file, or serve it).
-2. **Drag the "MUT.GG Auction Alerts" button to your bookmarks bar.** That's the entire install — the bookmark is the tool.
+1. Open `install.html` in your browser (double-click the file to the right, or serve it)
+2. **Drag the "MUT.GG Auction Alerts" button to your bookmarks bar.** That's the entire install — the bookmark is the tool
 3. **One-time Discord setup:**
-   - In Discord, pick a channel you control (a private server takes 30 seconds to create).
+   - In Discord, pick a channel you control (a private server takes 30 seconds to create)
    - Right-click the channel → **Edit Channel** → **Integrations** → **Webhooks** → **New Webhook** → **Copy Webhook URL**.
    - On any mut.gg page, click your new bookmark. Expand **⚙️ Alert delivery**, paste the URL into "Discord URL", hit **Save**, then **Test**. A test message should land in your Discord channel within a second.
    - On your phone, enable notifications for that channel (long-press → Notifications → All Messages).
@@ -35,11 +33,11 @@ To share with someone else: send them `install.html`, or paste the contents of `
 
 ---
 
-## How it works
+## How it works - non-technical / not curious about more, skip this
 
 ### Data sources
 
-Two anonymous endpoints, decoded from mut.gg's JS bundle on 2026-05-10. No login required, no API key.
+Two anonymous endpoints, decoded from mut.gg's JS bundle on 2026-05-10. No login required, no API key
 
 - **Search:**
   ```
@@ -84,7 +82,7 @@ Everything is in `localStorage` under the key `mutgg-alerts.v1`. Watches, delive
 
 ## Development
 
-No build system, no dependencies, no transpiler. Plain vanilla JS in one file.
+No build system, no dependencies, no transpiler. Plain vanilla JS in one file
 
 To make a change:
 
@@ -107,8 +105,3 @@ To make a change:
 - **Polling lag.** 2.5 min between polls + mut.gg's own data refresh cadence. This is not a 0-second auction sniper — it's an "I want to know when X becomes available, within a few minutes" tool.
 - **mut.gg endpoint stability.** The endpoints are inferred from the public JS bundle. If mut.gg renames or removes them, this breaks. Easy to re-decode if that happens (see `## How it works → Data sources`).
 
----
-
-## License
-
-Use it, fork it, share it. No warranty.
