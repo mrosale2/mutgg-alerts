@@ -45,7 +45,7 @@ Full step-by-step is in **[worker/README.md](worker/README.md)**. The short vers
 cd worker
 npm install
 npx wrangler login
-npx wrangler kv:namespace create WATCHES   # paste id into wrangler.toml
+npx wrangler kv namespace create WATCHES   # paste id into wrangler.toml
 npx wrangler secret put DISCORD_WEBHOOK    # paste your Discord webhook URL
 npx wrangler secret put AUTH_SECRET        # any random string
 npm run deploy

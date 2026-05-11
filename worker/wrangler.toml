@@ -2,6 +2,9 @@ name = "mutgg-alerts"
 main = "src/index.js"
 compatibility_date = "2026-05-01"
 
+# Expose the Worker on the free https://<name>.<subdomain>.workers.dev URL.
+workers_dev = true
+
 # Cron trigger: poll mut.gg every 2 minutes.
 # (Cloudflare's minimum cron interval is 1 minute on the free plan.)
 [triggers]
@@ -11,7 +14,7 @@ crons = ["*/2 * * * *"]
 # Replace the id below with the one returned by `wrangler kv:namespace create WATCHES`.
 [[kv_namespaces]]
 binding = "WATCHES"
-id = "REPLACE_WITH_KV_NAMESPACE_ID"
+id = "5cb145f547e847ecb52189f6f099ccc9"
 
 # Secrets (set via `wrangler secret put`, not in this file):
 #   DISCORD_WEBHOOK  — your Discord channel webhook URL

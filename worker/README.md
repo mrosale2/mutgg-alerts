@@ -43,7 +43,7 @@ Browser opens, you authorize, done. Free Cloudflare account works.
 ### 3. Create the KV namespace
 
 ```bash
-npx wrangler kv:namespace create WATCHES
+npx wrangler kv namespace create WATCHES
 ```
 
 Output looks like:

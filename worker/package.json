@@ -8,11 +8,11 @@
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
     "tail": "wrangler tail",
-    "kv:create": "wrangler kv:namespace create WATCHES",
+    "kv:create": "wrangler kv namespace create WATCHES",
     "secret:webhook": "wrangler secret put DISCORD_WEBHOOK",
     "secret:auth": "wrangler secret put AUTH_SECRET"
   },
   "devDependencies": {
-    "wrangler": "^3.90.0"
+    "wrangler": "^4.90.0"
   }
 }
