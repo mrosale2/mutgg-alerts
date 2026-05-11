@@ -1,0 +1,136 @@
+# Cloudflare Worker — always-on alerts
+
+This is the brain. A Cloudflare Worker that runs on a 2-minute cron, polls mut.gg for the watches you've configured, and pings a Discord webhook when a live auction's BIN is at or below your target price.
+
+**No browser tab required.** The Worker runs in Cloudflare's edge network forever. You only open the web UI when you want to add, edit, or remove watches.
+
+The Worker also serves the management UI at its root URL — same deploy, one place to go.
+
+---
+
+## What runs where
+
+| Piece | Where | Why |
+|---|---|---|
+| `scheduled()` cron handler | Cloudflare Workers (every 2 min) | Polls mut.gg, dedups via fingerprint, posts to Discord. |
+| `fetch()` HTTP API | Cloudflare Workers | Serves the UI HTML; exposes `/api/*` for CRUD on watches. |
+| Watches + dedup state | Cloudflare KV (free tier) | `watches` key holds all configs; `seen:<id>` tracks recently-seen listings per watch. |
+| Discord delivery | Discord webhook | Standard JSON POST. Push to phone via Discord app. |
+| Player search | mut.gg's anonymous `?name=` API | No auth required. |
+| Live auctions | mut.gg's anonymous prices endpoint | Same. |
+
+---
+
+## Deploy (one-time, ~10 minutes)
+
+### 1. Install Wrangler
+
+[Wrangler](https://developers.cloudflare.com/workers/wrangler/) is Cloudflare's CLI. Requires Node.js.
+
+```bash
+cd worker
+npm install
+```
+
+### 2. Log in to Cloudflare
+
+```bash
+npx wrangler login
+```
+
+Browser opens, you authorize, done. Free Cloudflare account works.
+
+### 3. Create the KV namespace
+
+```bash
+npx wrangler kv:namespace create WATCHES
+```
+
+Output looks like:
+
+```
+{ binding = "WATCHES", id = "abc123def456..." }
+```
+
+Copy the `id` value into `wrangler.toml`, replacing `REPLACE_WITH_KV_NAMESPACE_ID`.
+
+### 4. Set the secrets
+
+```bash
+# Your Discord webhook URL (right-click channel → Edit Channel → Integrations → Webhooks → New)
+npx wrangler secret put DISCORD_WEBHOOK
+
+# A random string to gate the UI; pick anything hard to guess
+npx wrangler secret put AUTH_SECRET
+```
+
+You'll be prompted to paste the value. The secrets are stored encrypted in Cloudflare — they never appear in the repo.
+
+### 5. Deploy
+
+```bash
+npm run deploy
+```
+
+Wrangler prints the URL, something like `https://mutgg-alerts.<your-subdomain>.workers.dev`.
+
+### 6. Open the UI
+
+Visit the URL. You'll be prompted for `AUTH_SECRET` once; the browser caches it in `localStorage`. Click **Test Discord** to verify the webhook works. Add a watch.
+
+The cron handler fires every 2 minutes automatically — no further action needed.
+
+---
+
+## Local development
+
+```bash
+npm run dev
+```
+
+Starts Wrangler in dev mode at `http://localhost:8787` with hot reload. The cron doesn't fire in dev mode, but you can trigger a poll manually:
+
+```bash
+curl -X POST http://localhost:8787/api/poll -H "X-Auth: <your-AUTH_SECRET>"
+```
+
+To stream production logs after deploying:
+
+```bash
+npm run tail
+```
+
+---
+
+## API reference
+
+All routes except `GET /` require header `X-Auth: <AUTH_SECRET>`.
+
+| Method | Path | Purpose |
+|---|---|---|
+| `GET` | `/` | Serve the management UI. |
+| `GET` | `/api/watches` | List all watches with their last-poll metadata. |
+| `POST` | `/api/watches` | Create or update a watch. Body: `{ externalId, gameSlug, url, name, program, ovr, platform, targetBin, recurring }`. |
+| `DELETE` | `/api/watches/:id` | Remove a watch (`id` is `<externalId>-<platform>`). |
+| `GET` | `/api/search?name=X` | Proxy mut.gg's player search; returns auctionable cards. |
+| `GET` | `/api/snapshot?externalId=...&platform=...` | Returns `{ cheapestBin, med, liveCount, lastUpdate }` for one card. Used by the UI to populate BIN/MED on alert cards. |
+| `POST` | `/api/test` | Fire a test alert through the Discord webhook. |
+| `POST` | `/api/poll` | Manually trigger a poll cycle (useful for testing without waiting for cron). |
+
+---
+
+## Costs
+
+All free-tier:
+
+- **Workers:** 100k requests/day free. Cron is 1 request per fire = 720/day at 2-min interval. Fetches inside the cron count against the same quota, ~watches × 720/day; with 10 watches, ~7,200/day. Well under limit.
+- **KV:** 100k reads, 1k writes, 1 GB storage. We do a handful of reads/writes per poll → well within limits.
+- **Discord webhooks:** free, no rate concerns at this volume.
+
+---
+
+## How the dedup works
+
+For every poll, we fingerprint each live auction as `<endDate>|<buyNowPrice>|<startingBid>`. If a fingerprint isn't in the watch's `seen` set, it's a *new* listing — we evaluate against the target price and fire if matched. After processing, we overwrite `seen` with the current snapshot (so expired listings naturally drop out).
+
+This means: the same listing across two polls fires once, not twice. A genuinely new listing fires once. A listing that re-appears after rotating out (rare) would fire again — that's intentional (it's a new opportunity from the buyer's perspective).

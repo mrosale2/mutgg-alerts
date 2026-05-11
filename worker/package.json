@@ -1,0 +1,18 @@
+{
+  "name": "mutgg-alerts-worker",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Cloudflare Worker that polls mut.gg for live auction snipes and pings Discord. Always-on, no browser tab required.",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "tail": "wrangler tail",
+    "kv:create": "wrangler kv:namespace create WATCHES",
+    "secret:webhook": "wrangler secret put DISCORD_WEBHOOK",
+    "secret:auth": "wrangler secret put AUTH_SECRET"
+  },
+  "devDependencies": {
+    "wrangler": "^3.90.0"
+  }
+}
