@@ -1,6 +1,7 @@
 node_modules/
 .wrangler/
 .dev.vars
+.auth-secret-*.txt
 .DS_Store
 Thumbs.db
 desktop.ini

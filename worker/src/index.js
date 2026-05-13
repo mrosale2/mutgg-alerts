@@ -14,7 +14,6 @@
 //   AUTH_SECRET      — random string the UI sends as X-Auth on API calls
 
 const MUTGG = 'https://www.mut.gg';
-const SEEN_CAP = 50;            // max fingerprints retained per watch
 const POLL_TIMEOUT_MS = 8000;   // per request
 
 const PLATFORMS = {
@@ -25,19 +24,31 @@ const PLATFORMS = {
 
 // ---------- helpers ----------
 
-const sig = a => `${a.endDate}|${a.buyNowPrice}|${a.startingBid}`;
-
 const fmt = n => n == null
   ? '—'
   : n >= 1e6 ? (n / 1e6).toFixed(2) + 'M'
   : n >= 1e3 ? Math.round(n / 1e3) + 'K'
   : '' + n;
 
+// Browser-like headers so mut.gg's Cloudflare bot-shield doesn't 403 us
+// (default Workers User-Agent is "Cloudflare-Workers" which gets flagged).
+const BROWSER_HEADERS = {
+  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+  'Accept': 'application/json, text/plain, */*',
+  'Accept-Language': 'en-US,en;q=0.9',
+  'Referer': 'https://www.mut.gg/',
+  'Origin':  'https://www.mut.gg',
+};
+
 async function fetchJson(url, init = {}) {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), POLL_TIMEOUT_MS);
   try {
-    const r = await fetch(url, { ...init, signal: ctrl.signal });
+    const r = await fetch(url, {
+      ...init,
+      signal: ctrl.signal,
+      headers: { ...BROWSER_HEADERS, ...(init.headers || {}) },
+    });
     if (!r.ok) throw new Error(`${url}: HTTP ${r.status}`);
     return await r.json();
   } finally { clearTimeout(t); }
@@ -75,14 +86,6 @@ async function saveWatches(env, watches) {
   await env.WATCHES.put('watches', JSON.stringify(watches));
 }
 
-async function loadSeen(env, id) {
-  const raw = await env.WATCHES.get(`seen:${id}`);
-  return raw ? JSON.parse(raw) : [];
-}
-async function saveSeen(env, id, list) {
-  await env.WATCHES.put(`seen:${id}`, JSON.stringify(list.slice(-SEEN_CAP)));
-}
-
 // ---------- Discord ----------
 
 async function postDiscord(webhook, { title, body, url, color = 0x1f5b3a, fields = [] }) {
@@ -115,47 +118,71 @@ async function pollOnce(env) {
   const ids = Object.keys(watches);
   const results = [];
 
+  // Dedupe fetches: multiple watches can share the same (gameSlug, externalId, platform).
+  // Fetch each unique card once per tick and evaluate every watch against the cached result.
+  // Keeps us well under Cloudflare's subrequest cap and reduces load on mut.gg.
+  const keyOf = w => `${w.gameSlug}|${w.externalId}|${w.platform}`;
+  const uniqueKeys = [...new Set(ids.map(id => keyOf(watches[id])))];
+  const liveByKey = new Map();
+  await Promise.all(uniqueKeys.map(async key => {
+    const [gameSlug, externalId, platform] = key.split('|');
+    try {
+      const { liveAuctions } = await fetchLiveAuctions(gameSlug, externalId, platform);
+      liveByKey.set(key, { liveAuctions });
+    } catch (e) {
+      liveByKey.set(key, { error: String(e.message || e) });
+    }
+  }));
+
   for (const id of ids) {
     const w = watches[id];
-    try {
-      const { liveAuctions } = await fetchLiveAuctions(w.gameSlug, w.externalId, w.platform);
-      const seen = new Set(await loadSeen(env, id));
-      const fresh = liveAuctions.filter(a => !seen.has(sig(a)));
+    const fetched = liveByKey.get(keyOf(w));
 
-      // Update seen fingerprints to current snapshot (drop expired).
-      const newSeen = liveAuctions.map(sig);
-
-      const matches = fresh.filter(a =>
-        a.buyNowPrice != null && (w.targetBin == null || a.buyNowPrice <= w.targetBin)
-      );
-
-      for (const a of matches) {
-        await postDiscord(webhook, {
-          title: `🎯 ${w.name} (${w.program}) — ${PLATFORMS[w.platform] || w.platform}`,
-          body: `**BIN ${fmt(a.buyNowPrice)}** · target ${fmt(w.targetBin)}\nCurrent bid ${fmt(a.currentBid ?? a.startingBid)} · ends <t:${Math.floor(new Date(a.endDate).getTime()/1000)}:R>`,
-          url: `${MUTGG}${w.url}#prices`,
-          color: 0xF5C518,
-          fields: [
-            { name: 'Bids',   value: String(a.bidCount ?? 0), inline: true },
-            { name: 'Recur',  value: w.recurring ? 'Yes' : 'No', inline: true },
-          ],
-        });
-        w.lastAlertedAt = Date.now();
-        w.lastAlertedPrice = a.buyNowPrice;
-      }
-
-      await saveSeen(env, id, newSeen);
+    if (fetched.error) {
+      w.lastError = fetched.error;
       w.lastChecked = Date.now();
-      w.lastError = null;
-      results.push({ id, name: w.name, fresh: fresh.length, fired: matches.length });
-    } catch (e) {
-      w.lastError = String(e.message || e);
       results.push({ id, name: w.name, error: w.lastError });
+      continue;
     }
+
+    const { liveAuctions } = fetched;
+    const matches = liveAuctions.filter(a =>
+      a.buyNowPrice != null && (w.targetBin == null || a.buyNowPrice <= w.targetBin)
+    );
+    const cheapest = matches.reduce(
+      (m, a) => (m == null || a.buyNowPrice < m.buyNowPrice) ? a : m,
+      null
+    );
+
+    // Alert rule: fire once when a qualifying listing first appears, then only re-fire
+    // if a strictly cheaper listing shows up later. Never re-fire at the same price,
+    // even after a player relists.
+    const beatsPrior = cheapest && (w.lastAlertedPrice == null || cheapest.buyNowPrice < w.lastAlertedPrice);
+
+    let fired = 0;
+    if (beatsPrior) {
+      await postDiscord(webhook, {
+        title: `🎯 ${w.name} (${w.program}) — ${PLATFORMS[w.platform] || w.platform}`,
+        body: `**BIN ${fmt(cheapest.buyNowPrice)}** · target ${fmt(w.targetBin)}\nCurrent bid ${fmt(cheapest.currentBid ?? cheapest.startingBid)} · ends <t:${Math.floor(new Date(cheapest.endDate).getTime()/1000)}:R>${matches.length > 1 ? `\n*+${matches.length - 1} other listing(s) below target*` : ''}`,
+        url: `${MUTGG}${w.url}#prices`,
+        color: 0xF5C518,
+        fields: [
+          { name: 'Bids',   value: String(cheapest.bidCount ?? 0), inline: true },
+          { name: 'Recur',  value: w.recurring ? 'Yes' : 'No', inline: true },
+        ],
+      });
+      w.lastAlertedAt = Date.now();
+      w.lastAlertedPrice = cheapest.buyNowPrice;
+      fired = 1;
+    }
+
+    w.lastChecked = Date.now();
+    w.lastError = null;
+    results.push({ id, name: w.name, matches: matches.length, cheapest: cheapest?.buyNowPrice ?? null, fired });
   }
 
   await saveWatches(env, watches);
-  return { polled: ids.length, results };
+  return { polled: ids.length, uniqueFetches: uniqueKeys.length, results };
 }
 
 // ---------- HTTP API ----------
@@ -257,6 +284,20 @@ async function handleApi(req, env, url) {
   if (req.method === 'POST' && path === '/api/poll') {
     const r = await pollOnce(env);
     return jsonResponse(r);
+  }
+
+  // One-shot cleanup of orphaned `seen:*` KV keys left behind by the old
+  // per-listing fingerprint dedup model. Safe to re-run; no-op once empty.
+  if (req.method === 'POST' && path === '/api/cleanup-seen') {
+    let deleted = 0;
+    let cursor;
+    do {
+      const list = await env.WATCHES.list({ prefix: 'seen:', cursor });
+      await Promise.all(list.keys.map(k => env.WATCHES.delete(k.name)));
+      deleted += list.keys.length;
+      cursor = list.list_complete ? null : list.cursor;
+    } while (cursor);
+    return jsonResponse({ ok: true, deleted });
   }
 
   return jsonResponse({ error: 'not found' }, { status: 404 });
