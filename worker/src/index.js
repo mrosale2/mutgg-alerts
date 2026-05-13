@@ -380,6 +380,10 @@ button.pill.off { background:#1a2229; color:#9aa3ad; }
       <label>Player</label>
       <input id="f-name" placeholder="Tyreek Hill" autocomplete="off">
     </div>
+    <div style="flex:0 0 90px;">
+      <label>OVR (optional)</label>
+      <input id="f-ovr" type="number" inputmode="numeric" min="0" max="99" placeholder="any" autocomplete="off">
+    </div>
     <div style="flex:1.3;">
       <label>Program</label>
       <select id="f-program"><option value="">— search a player first —</option></select>
@@ -436,7 +440,8 @@ async function api(path, opts = {}) {
   return await r.json();
 }
 
-let searchCache = [];  // cards returned for the current name query
+let searchRaw = [];    // all cards returned for the current name query (pre-OVR filter)
+let searchCache = [];  // cards currently shown in dropdown (post-OVR filter); dropdown index = index here
 let recurring = true;
 $('#f-recurring').onclick = () => {
   recurring = !recurring;
@@ -445,25 +450,47 @@ $('#f-recurring').onclick = () => {
   $('#f-recurring').textContent = recurring ? 'Yes' : 'No';
 };
 
+function renderProgramDropdown() {
+  const sel = $('#f-program');
+  const ovrRaw = ($('#f-ovr').value || '').trim();
+  const ovrFilter = ovrRaw === '' ? null : parseInt(ovrRaw, 10);
+  const filtered = Number.isFinite(ovrFilter)
+    ? searchRaw.filter(p => p.overall === ovrFilter)
+    : searchRaw;
+  searchCache = filtered;
+  if (searchRaw.length === 0) {
+    sel.innerHTML = '<option value="">— search a player first —</option>';
+    return;
+  }
+  if (filtered.length === 0) {
+    sel.innerHTML = '<option value="">— no ' + ovrFilter + ' OVR matches —</option>';
+    return;
+  }
+  sel.innerHTML = filtered.map((p, i) =>
+    '<option value="' + i + '">' + p.overall + ' OVR · ' + p.program?.name + ' · ' + p.firstName + ' ' + p.lastName + '</option>'
+  ).join('');
+}
+
 let searchTimer;
 $('#f-name').addEventListener('input', () => {
   clearTimeout(searchTimer);
   const name = $('#f-name').value.trim();
   const sel = $('#f-program');
   sel.innerHTML = '<option value="">— typing… —</option>';
-  if (!name) { sel.innerHTML = '<option value="">— search a player first —</option>'; return; }
+  if (!name) { searchRaw = []; searchCache = []; sel.innerHTML = '<option value="">— search a player first —</option>'; return; }
   searchTimer = setTimeout(async () => {
     try {
       const { data } = await api('/api/search?name=' + encodeURIComponent(name));
       const wantFirst = name.trim().split(/\\s+/).slice(0,-1).join(' ').toLowerCase();
       const wantLast  = name.trim().split(/\\s+/).pop().toLowerCase();
-      const cards = data.filter(p => p.lastName.toLowerCase() === wantLast && (!wantFirst || p.firstName.toLowerCase().startsWith(wantFirst)));
-      searchCache = cards;
-      if (cards.length === 0) { sel.innerHTML = '<option value="">— no auctionable matches —</option>'; return; }
-      sel.innerHTML = cards.map((p, i) => '<option value="' + i + '">' + p.program?.name + ' · ' + p.overall + ' OVR</option>').join('');
-    } catch (e) { sel.innerHTML = '<option value="">— error: ' + e.message + ' —</option>'; }
+      searchRaw = data.filter(p => p.lastName.toLowerCase() === wantLast && (!wantFirst || p.firstName.toLowerCase().startsWith(wantFirst)));
+      if (searchRaw.length === 0) { searchCache = []; sel.innerHTML = '<option value="">— no auctionable matches —</option>'; return; }
+      renderProgramDropdown();
+    } catch (e) { searchRaw = []; searchCache = []; sel.innerHTML = '<option value="">— error: ' + e.message + ' —</option>'; }
   }, 300);
 });
+
+$('#f-ovr').addEventListener('input', renderProgramDropdown);
 
 $('#btn-add').onclick = async () => {
   const idx = $('#f-program').value;
@@ -481,7 +508,8 @@ $('#btn-add').onclick = async () => {
       recurring,
     })});
     status.className = 'status ok'; status.textContent = 'Added.';
-    $('#f-name').value = ''; $('#f-target').value = ''; $('#f-program').innerHTML = '<option value="">— search a player first —</option>';
+    $('#f-name').value = ''; $('#f-ovr').value = ''; $('#f-target').value = ''; $('#f-program').innerHTML = '<option value="">— search a player first —</option>';
+    searchRaw = []; searchCache = [];
     refresh();
   } catch (e) { status.className = 'status err'; status.textContent = 'Failed: ' + e.message; }
 };
