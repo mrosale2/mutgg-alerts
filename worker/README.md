@@ -129,8 +129,14 @@ All free-tier:
 
 ---
 
-## How the dedup works
+## How the alert rule works
 
-For every poll, we fingerprint each live auction as `<endDate>|<buyNowPrice>|<startingBid>`. If a fingerprint isn't in the watch's `seen` set, it's a *new* listing — we evaluate against the target price and fire if matched. After processing, we overwrite `seen` with the current snapshot (so expired listings naturally drop out).
+Per poll, for each watch we take the **cheapest** live auction below `targetBin`. We fire the alert only when that price is *strictly cheaper* than the last price we ever alerted at for this watch (`lastAlertedPrice`, persisted on the watch in KV).
 
-This means: the same listing across two polls fires once, not twice. A genuinely new listing fires once. A listing that re-appears after rotating out (rare) would fire again — that's intentional (it's a new opportunity from the buyer's perspective).
+This means:
+- The same listing across two polls fires once, not twice.
+- A new listing at or above the last alerted price stays silent — even if it's still below target.
+- A new listing that beats the last alerted price fires immediately.
+- Resetting alerts on a watch = clear `lastAlertedPrice` (delete + re-add the watch is the easiest way today).
+
+State lives on the watch object itself (`lastAlertedAt`, `lastAlertedPrice`). There is no separate `seen:*` KV key — earlier versions used one and `/api/cleanup-seen` exists to sweep up the orphans, but new deploys never write them.
