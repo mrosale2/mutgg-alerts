@@ -5,10 +5,10 @@ compatibility_date = "2026-05-01"
 # Expose the Worker on the free https://<name>.<subdomain>.workers.dev URL.
 workers_dev = true
 
-# Cron trigger: poll mut.gg every 2 minutes.
-# (Cloudflare's minimum cron interval is 1 minute on the free plan.)
+# Cron trigger: poll mut.gg every minute.
+# (1 minute is the cron-trigger minimum on every Workers plan.)
 [triggers]
-crons = ["*/2 * * * *"]
+crons = ["* * * * *"]
 
 # KV namespace for storing watches + dedup fingerprints.
 # Replace the id below with the one returned by `wrangler kv:namespace create WATCHES`.

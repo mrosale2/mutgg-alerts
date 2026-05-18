@@ -1,6 +1,6 @@
 # mut.gg auction alerts
 
-Always-on auction sniping for [mut.gg](https://www.mut.gg). A Cloudflare Worker polls mut.gg every 2 minutes, checks your watch list, and pings a Discord channel (and your phone via the Discord app) when a player's BIN drops to your target price.
+Always-on auction sniping for [mut.gg](https://www.mut.gg). A Cloudflare Worker polls mut.gg every minute, checks your watch list, and pings a Discord channel (and your phone via the Discord app) when a player's BIN drops to your target price.
 
 **No browser tab required.** Set up once, runs forever in the cloud. You open a web UI only when you want to add/edit/remove watches.
 
@@ -8,7 +8,7 @@ Always-on auction sniping for [mut.gg](https://www.mut.gg). A Cloudflare Worker 
 
 ## How it works
 
-1. **Cloudflare Worker** — runs on a 2-minute cron. For each watch, it hits mut.gg's public `prices` endpoint, looks at the current `liveAuctions`, and if a new listing has `BIN ≤ target`, it posts to your Discord webhook.
+1. **Cloudflare Worker** — runs on a 1-minute cron. For each watch, it hits mut.gg's public `prices` endpoint, looks at the current `liveAuctions`, and if a new listing has `BIN ≤ target`, it posts to your Discord webhook.
 2. **Discord webhook** — your channel ping, with your phone notification handled by the Discord mobile app. No extra service required.
 3. **Web UI** — served by the Worker itself at its `*.workers.dev` URL. Add a watch by typing a player name; the program dropdown auto-populates with that player's available cards. Set a target price + recurring toggle. Done.
 

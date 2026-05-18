@@ -1,7 +1,7 @@
 // MUT.GG Live Auction Alerts — Cloudflare Worker
 //
 // Two entrypoints:
-//   - scheduled(): cron-triggered every 2 min, polls mut.gg and fires Discord alerts
+//   - scheduled(): cron-triggered every 1 min, polls mut.gg and fires Discord alerts
 //   - fetch():     HTTP API + serves the management UI
 //
 // State (Cloudflare KV, binding "WATCHES"):
@@ -372,7 +372,7 @@ button.pill.off { background:#1a2229; color:#9aa3ad; }
 </style>
 </head><body>
 <h1>🔔 MUT.GG Auction Alerts</h1>
-<p class="lede">Always-on. Polls mut.gg every 2 minutes. Pings Discord when BIN ≤ target.</p>
+<p class="lede">Always-on. Polls mut.gg every minute. Pings Discord when BIN ≤ target.</p>
 
 <div class="card">
   <div class="row" style="gap:12px;">
@@ -582,6 +582,6 @@ async function refresh() {
 }
 
 refresh();
-setInterval(refresh, 60_000);  // refresh card view every 60s; cron polls every 2 min independently
+setInterval(refresh, 60_000);  // refresh card view every 60s; cron polls every minute independently
 </script>
 </body></html>`;

@@ -1,6 +1,6 @@
 # Cloudflare Worker — always-on alerts
 
-This is the brain. A Cloudflare Worker that runs on a 2-minute cron, polls mut.gg for the watches you've configured, and pings a Discord webhook when a live auction's BIN is at or below your target price.
+This is the brain. A Cloudflare Worker that runs on a 1-minute cron, polls mut.gg for the watches you've configured, and pings a Discord webhook when a live auction's BIN is at or below your target price.
 
 **No browser tab required.** The Worker runs in Cloudflare's edge network forever. You only open the web UI when you want to add, edit, or remove watches.
 
@@ -12,7 +12,7 @@ The Worker also serves the management UI at its root URL — same deploy, one pl
 
 | Piece | Where | Why |
 |---|---|---|
-| `scheduled()` cron handler | Cloudflare Workers (every 2 min) | Polls mut.gg, dedups via fingerprint, posts to Discord. |
+| `scheduled()` cron handler | Cloudflare Workers (every 1 min) | Polls mut.gg, fires Discord alert when cheapest BIN beats `lastAlertedPrice`. |
 | `fetch()` HTTP API | Cloudflare Workers | Serves the UI HTML; exposes `/api/*` for CRUD on watches. |
 | Watches + dedup state | Cloudflare KV (free tier) | `watches` key holds all configs; `seen:<id>` tracks recently-seen listings per watch. |
 | Discord delivery | Discord webhook | Standard JSON POST. Push to phone via Discord app. |
@@ -78,7 +78,7 @@ Wrangler prints the URL, something like `https://mutgg-alerts.<your-subdomain>.w
 
 Visit the URL. You'll be prompted for `AUTH_SECRET` once; the browser caches it in `localStorage`. Click **Test Discord** to verify the webhook works. Add a watch.
 
-The cron handler fires every 2 minutes automatically — no further action needed.
+The cron handler fires every minute automatically — no further action needed.
 
 ---
 
@@ -121,11 +121,11 @@ All routes except `GET /` require header `X-Auth: <AUTH_SECRET>`.
 
 ## Costs
 
-All free-tier:
+Workers Paid plan ($5/mo) — bundled quotas easily cover this workload:
 
-- **Workers:** 100k requests/day free. Cron is 1 request per fire = 720/day at 2-min interval. Fetches inside the cron count against the same quota, ~watches × 720/day; with 10 watches, ~7,200/day. Well under limit.
-- **KV:** 100k reads, 1k writes, 1 GB storage. We do a handful of reads/writes per poll → well within limits.
-- **Discord webhooks:** free, no rate concerns at this volume.
+- **Workers:** 10M requests/month included. Cron is 1 request per fire = 1,440/day. Subrequests inside the cron count separately (1,000/invocation cap) — with N unique watched cards per tick, usage = N mut.gg fetches + alerts that fire. At 100 watches you'd use ~100/1,000.
+- **KV:** 10M reads, 1M writes, 1 GB storage per month. Current design writes the watches blob once per tick = 1,440/day, well under the ~33k/day equivalent.
+- **Discord webhooks:** free. Discord rate-limits ~30 msg/min per webhook — only matters if you're firing dozens of alerts a minute.
 
 ---
 
