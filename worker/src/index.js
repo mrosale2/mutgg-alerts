@@ -274,13 +274,21 @@ async function handleApi(req, env, url) {
     const gameSlug   = url.searchParams.get('gameSlug') || '26';
     if (!externalId || !platform) return jsonResponse({ error: 'missing externalId/platform' }, { status: 400 });
     try {
-      const [{ liveAuctions, lastUpdate }, overall] = await Promise.all([
-        fetchLiveAuctions(gameSlug, externalId, platform),
-        fetchOverallPrices(externalId).catch(() => null),
-      ]);
-      const cheapestBin = liveAuctions.reduce((m, a) => a.buyNowPrice != null && (m == null || a.buyNowPrice < m) ? a.buyNowPrice : m, null);
+      const live = await fetchLiveAuctions(gameSlug, externalId, platform).catch(e => {
+        return { liveAuctions: [], lastUpdate: null, _error: String(e.message || e) };
+      });
+      const overall = await fetchOverallPrices(externalId).catch(() => null);
+      const cheapestBin = live.liveAuctions.reduce(
+        (m, a) => a.buyNowPrice != null && (m == null || a.buyNowPrice < m) ? a.buyNowPrice : m,
+        null
+      );
       const med = overall?.price?.[platform] ?? null;
-      return jsonResponse({ cheapestBin, med, liveCount: liveAuctions.length, lastUpdate });
+      return jsonResponse({
+        cheapestBin, med,
+        liveCount: live.liveAuctions.length,
+        lastUpdate: live.lastUpdate,
+        ...(live._error ? { error: live._error } : {}),
+      });
     } catch (e) {
       return jsonResponse({ error: String(e.message || e) }, { status: 502 });
     }
