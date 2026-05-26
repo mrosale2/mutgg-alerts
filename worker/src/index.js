@@ -41,17 +41,34 @@ const BROWSER_HEADERS = {
 };
 
 async function fetchJson(url, init = {}) {
-  const ctrl = new AbortController();
-  const t = setTimeout(() => ctrl.abort(), POLL_TIMEOUT_MS);
-  try {
-    const r = await fetch(url, {
-      ...init,
-      signal: ctrl.signal,
-      headers: { ...BROWSER_HEADERS, ...(init.headers || {}) },
-    });
-    if (!r.ok) throw new Error(`${url}: HTTP ${r.status}`);
-    return await r.json();
-  } finally { clearTimeout(t); }
+  const RETRY_DELAYS_MS = [0, 2000, 5000];  // 3 attempts total
+  const RETRY_STATUSES  = new Set([403, 429, 500, 502, 503, 504]);
+  let lastErr;
+  for (let attempt = 0; attempt < RETRY_DELAYS_MS.length; attempt++) {
+    if (RETRY_DELAYS_MS[attempt] > 0) {
+      await new Promise(res => setTimeout(res, RETRY_DELAYS_MS[attempt]));
+    }
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), POLL_TIMEOUT_MS);
+    try {
+      const r = await fetch(url, {
+        ...init,
+        signal: ctrl.signal,
+        headers: { ...BROWSER_HEADERS, ...(init.headers || {}) },
+      });
+      if (r.ok) return await r.json();
+      if (!RETRY_STATUSES.has(r.status)) {
+        throw new Error(`${url}: HTTP ${r.status}`);
+      }
+      lastErr = new Error(`${url}: HTTP ${r.status} (attempt ${attempt + 1})`);
+      console.log(`fetchJson retry: ${lastErr.message}`);
+    } catch (e) {
+      lastErr = e;
+      if (attempt === RETRY_DELAYS_MS.length - 1) break;
+      console.log(`fetchJson error attempt ${attempt + 1}: ${e.message}`);
+    } finally { clearTimeout(t); }
+  }
+  throw lastErr;
 }
 
 async function searchPlayer(name) {
