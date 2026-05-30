@@ -5,10 +5,11 @@ compatibility_date = "2026-05-01"
 # Expose the Worker on the free https://<name>.<subdomain>.workers.dev URL.
 workers_dev = true
 
-# Cron trigger: poll mut.gg every minute.
-# (1 minute is the cron-trigger minimum on every Workers plan.)
+# Cron triggers:
+#   "* * * * *"    — every minute: poll mut.gg for live auctions
+#   "0 8 * * *"    — daily at 08:00 UTC (~midnight-3am PT): refresh filter candidates
 [triggers]
-crons = ["* * * * *"]
+crons = ["* * * * *", "0 8 * * *"]
 
 # KV namespace for storing watches + dedup fingerprints.
 # Replace the id below with the one returned by `wrangler kv:namespace create WATCHES`.

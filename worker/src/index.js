@@ -41,13 +41,21 @@ const BROWSER_HEADERS = {
 };
 
 async function fetchJson(url, init = {}) {
-  const RETRY_DELAYS_MS = [0, 2000, 5000];  // 3 attempts total
+  // Per-status retry delays. 429 (rate limit) gets longer backoff than generic
+  // transient errors; mut.gg may also send Retry-After which we'll honor if present.
+  const BASE_DELAYS_MS = [0, 2000, 5000];      // for 403/5xx
+  const RATE_DELAYS_MS = [0, 12000, 30000];    // for 429 — bigger backoff
   const RETRY_STATUSES  = new Set([403, 429, 500, 502, 503, 504]);
   let lastErr;
-  for (let attempt = 0; attempt < RETRY_DELAYS_MS.length; attempt++) {
-    if (RETRY_DELAYS_MS[attempt] > 0) {
-      await new Promise(res => setTimeout(res, RETRY_DELAYS_MS[attempt]));
-    }
+  let nextStatus = null;
+  let retryAfterMs = 0;
+  for (let attempt = 0; attempt < BASE_DELAYS_MS.length; attempt++) {
+    const baseDelay = nextStatus === 429
+      ? RATE_DELAYS_MS[attempt]
+      : BASE_DELAYS_MS[attempt];
+    const wait = Math.max(baseDelay, retryAfterMs);
+    if (wait > 0) await new Promise(res => setTimeout(res, wait));
+    retryAfterMs = 0;
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), POLL_TIMEOUT_MS);
     try {
@@ -60,15 +68,35 @@ async function fetchJson(url, init = {}) {
       if (!RETRY_STATUSES.has(r.status)) {
         throw new Error(`${url}: HTTP ${r.status}`);
       }
+      nextStatus = r.status;
+      const ra = r.headers.get('retry-after');
+      if (ra) {
+        const sec = Number(ra);
+        if (Number.isFinite(sec)) retryAfterMs = sec * 1000;
+      }
       lastErr = new Error(`${url}: HTTP ${r.status} (attempt ${attempt + 1})`);
-      console.log(`fetchJson retry: ${lastErr.message}`);
     } catch (e) {
       lastErr = e;
-      if (attempt === RETRY_DELAYS_MS.length - 1) break;
-      console.log(`fetchJson error attempt ${attempt + 1}: ${e.message}`);
+      if (attempt === BASE_DELAYS_MS.length - 1) break;
     } finally { clearTimeout(t); }
   }
   throw lastErr;
+}
+
+// Cap concurrent in-flight fetches. Pass an array of items and an async worker;
+// only `limit` workers are running at a time. Avoids hammering mut.gg with 100
+// parallel requests when polling a filter watch chunk.
+async function mapWithConcurrency(items, limit, worker) {
+  const results = new Array(items.length);
+  let next = 0;
+  async function pump() {
+    while (next < items.length) {
+      const i = next++;
+      results[i] = await worker(items[i], i);
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, pump));
+  return results;
 }
 
 async function searchPlayer(name) {
@@ -93,6 +121,74 @@ async function fetchOverallPrices(externalId) {
   return (j.data || [])[0] || null;
 }
 
+// Batch median fetch: takes a list of externalIds and returns a Map keyed by externalId.
+// mut.gg's overall-prices endpoint accepts comma-separated `external_ids`. We chunk into
+// groups of 25 to keep URL length sane.
+async function fetchOverallPricesBatch(externalIds) {
+  const out = new Map();
+  if (!externalIds.length) return out;
+  const CHUNK = 25;
+  const groups = [];
+  for (let i = 0; i < externalIds.length; i += CHUNK) groups.push(externalIds.slice(i, i + CHUNK));
+  await Promise.all(groups.map(async ids => {
+    try {
+      const j = await fetchJson(`${MUTGG}/api/mutdb/prices/overall/playeritem/?external_ids=${ids.join(',')}`);
+      for (const entry of (j.data || [])) {
+        if (entry.externalId != null) out.set(entry.externalId, entry);
+      }
+    } catch {/* swallow — median is non-critical */}
+  }));
+  return out;
+}
+
+// Paginate mut.gg's player-items endpoint and collect all auctionable cards
+// matching a filter. Optionally narrows by program name (substring, case-insensitive).
+async function discoverCandidates({ overallMin, overallMax, platform, programFilter }) {
+  const base = new URLSearchParams({
+    overall__gte: String(overallMin),
+    overall__lte: String(overallMax),
+    can_auction:  'true',
+  }).toString();
+  const all = [];
+  let page = 1;
+  let total = Infinity;
+  while (all.length < total && page <= 50 /* safety cap */) {
+    const j = await fetchJson(`${MUTGG}/api/mutdb/player-items/?${base}&page=${page}`);
+    total = j.totalCount ?? all.length;
+    const items = (j.data || []).filter(p => p.canAuction);
+    for (const p of items) {
+      all.push({
+        externalId: p.externalId,
+        gameSlug:   p.gameSlug,
+        url:        p.url,
+        name:       `${p.firstName} ${p.lastName}`,
+        program:    p.program?.name || '?',
+        ovr:        p.overall,
+      });
+    }
+    if (!items.length) break;
+    page++;
+  }
+  // Client-side program filter (mut.gg's program_id requires numeric ids we don't
+  // currently resolve; substring match on program name is good enough for ~hundreds).
+  if (programFilter) {
+    const pf = programFilter.toLowerCase().trim();
+    return all.filter(c => (c.program || '').toLowerCase().includes(pf));
+  }
+  return all;
+}
+
+// Effective target price for a watch given its current median. Supports two modes:
+//   - absolute (default): targetBin is a fixed coin price
+//   - percent: alert when BIN ≤ median × (1 - targetPercent/100). e.g. percent=30
+//     means "alert when BIN is at least 30% under the card's median price".
+function effectiveTarget(watch, med) {
+  if (watch.targetMode === 'percent' && watch.targetPercent != null && med != null) {
+    return Math.floor(med * (1 - watch.targetPercent / 100));
+  }
+  return watch.targetBin;
+}
+
 // ---------- KV ----------
 
 async function loadWatches(env) {
@@ -101,6 +197,30 @@ async function loadWatches(env) {
 }
 async function saveWatches(env, watches) {
   await env.WATCHES.put('watches', JSON.stringify(watches));
+}
+
+// Filter-watch state: candidate card list, and per-candidate last-alerted price.
+// Candidates are stored without expiration; refresh is explicit via API or auto
+// when a candidate poll cycle wraps (see pollFilterWatch).
+async function loadCandidates(env, watchId) {
+  const raw = await env.WATCHES.get(`candidates:${watchId}`);
+  return raw ? JSON.parse(raw) : null;
+}
+async function saveCandidates(env, watchId, list) {
+  await env.WATCHES.put(`candidates:${watchId}`, JSON.stringify(list));
+}
+
+// One KV entry per (filter watch, candidate). Stores the last price we alerted on.
+// Cleared when the candidate goes off-market so re-listings can re-arm.
+async function loadLastAlerted(env, watchId, externalId) {
+  const raw = await env.WATCHES.get(`la:${watchId}:${externalId}`);
+  return raw ? Number(raw) : null;
+}
+async function saveLastAlerted(env, watchId, externalId, price) {
+  await env.WATCHES.put(`la:${watchId}:${externalId}`, String(price));
+}
+async function clearLastAlerted(env, watchId, externalId) {
+  await env.WATCHES.delete(`la:${watchId}:${externalId}`);
 }
 
 // ---------- Discord ----------
@@ -127,17 +247,17 @@ async function postDiscord(webhook, { title, body, url, color = 0x1f5b3a, fields
 
 // ---------- cron: poll & alert ----------
 
-async function pollOnce(env) {
-  const webhook = env.DISCORD_WEBHOOK;
-  if (!webhook) return { skipped: 'no DISCORD_WEBHOOK secret' };
+// Filter-watch poll tuning.
+// Bursting (100 in parallel) gets us 429'd; sustained low rate doesn't. With
+// concurrency=5 and chunk=100, we spread 100 requests over ~20 sec at ~5 req/sec
+// sustained — well below mut.gg's threshold. Sweep wall-clock for 400 candidates
+// drops to ~4 min vs. ~16 min at the previous 25/tick.
+const FILTER_CHUNK_SIZE = 100;
+const FILTER_CONCURRENCY = 5;
 
-  const watches = await loadWatches(env);
-  const ids = Object.keys(watches);
+async function pollCardWatches(env, watches, ids, webhook) {
   const results = [];
-
-  // Dedupe fetches: multiple watches can share the same (gameSlug, externalId, platform).
-  // Fetch each unique card once per tick and evaluate every watch against the cached result.
-  // Keeps us well under Cloudflare's subrequest cap and reduces load on mut.gg.
+  // Dedupe fetches: multiple card watches can share (gameSlug, externalId, platform).
   const keyOf = w => `${w.gameSlug}|${w.externalId}|${w.platform}`;
   const uniqueKeys = [...new Set(ids.map(id => keyOf(watches[id])))];
   const liveByKey = new Map();
@@ -151,36 +271,52 @@ async function pollOnce(env) {
     }
   }));
 
+  // Batch-fetch medians for all unique externalIds in one or two API hits.
+  const uniqueExternalIds = [...new Set(ids.map(id => watches[id].externalId))];
+  const medianByExternalId = await fetchOverallPricesBatch(uniqueExternalIds);
+
   for (const id of ids) {
     const w = watches[id];
     const fetched = liveByKey.get(keyOf(w));
-
     if (fetched.error) {
       w.lastError = fetched.error;
       w.lastChecked = Date.now();
       results.push({ id, name: w.name, error: w.lastError });
       continue;
     }
-
     const { liveAuctions } = fetched;
+    const med = medianByExternalId.get(w.externalId)?.price?.[w.platform] ?? null;
+
+    // Cache snapshot data on the watch so the UI doesn't need its own mut.gg fetch.
+    const allCheapest = liveAuctions.reduce(
+      (m, a) => a.buyNowPrice != null && (m == null || a.buyNowPrice < m) ? a.buyNowPrice : m,
+      null
+    );
+    w.cachedCheapestBin = allCheapest;
+    w.cachedMed = med;
+    w.cachedSnapshotAt = Date.now();
+
+    // Effective target accounts for absolute vs percent-of-median modes.
+    const target = effectiveTarget(w, med);
     const matches = liveAuctions.filter(a =>
-      a.buyNowPrice != null && (w.targetBin == null || a.buyNowPrice <= w.targetBin)
+      a.buyNowPrice != null && (target == null || a.buyNowPrice <= target)
     );
     const cheapest = matches.reduce(
       (m, a) => (m == null || a.buyNowPrice < m.buyNowPrice) ? a : m,
       null
     );
-
-    // Alert rule: fire once when a qualifying listing first appears, then only re-fire
-    // if a strictly cheaper listing shows up later. Never re-fire at the same price,
-    // even after a player relists.
+    if (liveAuctions.length === 0 && w.lastAlertedPrice != null) {
+      w.lastAlertedPrice = null;
+    }
     const beatsPrior = cheapest && (w.lastAlertedPrice == null || cheapest.buyNowPrice < w.lastAlertedPrice);
-
     let fired = 0;
     if (beatsPrior) {
+      const targetLabel = w.targetMode === 'percent'
+        ? `≤ ${w.targetPercent}% under median (${fmt(target)})`
+        : fmt(w.targetBin);
       await postDiscord(webhook, {
         title: `🎯 ${w.name} (${w.program}) — ${PLATFORMS[w.platform] || w.platform}`,
-        body: `**BIN ${fmt(cheapest.buyNowPrice)}** · target ${fmt(w.targetBin)}\nCurrent bid ${fmt(cheapest.currentBid ?? cheapest.startingBid)} · ends <t:${Math.floor(new Date(cheapest.endDate).getTime()/1000)}:R>${matches.length > 1 ? `\n*+${matches.length - 1} other listing(s) below target*` : ''}`,
+        body: `**BIN ${fmt(cheapest.buyNowPrice)}** · target ${targetLabel}${med != null ? ` · median ${fmt(med)}` : ''}\nCurrent bid ${fmt(cheapest.currentBid ?? cheapest.startingBid)} · ends <t:${Math.floor(new Date(cheapest.endDate).getTime()/1000)}:R>${matches.length > 1 ? `\n*+${matches.length - 1} other listing(s) below target*` : ''}`,
         url: `${MUTGG}${w.url}#prices`,
         color: 0xF5C518,
         fields: [
@@ -192,14 +328,147 @@ async function pollOnce(env) {
       w.lastAlertedPrice = cheapest.buyNowPrice;
       fired = 1;
     }
-
     w.lastChecked = Date.now();
     w.lastError = null;
     results.push({ id, name: w.name, matches: matches.length, cheapest: cheapest?.buyNowPrice ?? null, fired });
   }
+  return { results, uniqueFetches: uniqueKeys.length };
+}
 
-  await saveWatches(env, watches);
-  return { polled: ids.length, uniqueFetches: uniqueKeys.length, results };
+async function pollFilterWatch(env, watch, webhook) {
+  // Load the cached candidate list; if missing, skip this tick (UI / API will rediscover).
+  const candidates = await loadCandidates(env, watch.id);
+  if (!candidates || candidates.length === 0) {
+    watch.lastError = 'no candidates cached — refresh via /api/watches/:id/refresh';
+    watch.lastChecked = Date.now();
+    return { id: watch.id, skipped: 'no candidates' };
+  }
+
+  // Take the next chunk starting from the cursor; wrap around if we hit the end.
+  const start = (watch.cursor || 0) % candidates.length;
+  const end   = Math.min(start + FILTER_CHUNK_SIZE, candidates.length);
+  const chunk = candidates.slice(start, end);
+  const nextCursor = end >= candidates.length ? 0 : end;
+
+  // Batch-fetch medians for the chunk (one request per 25-id group) so each
+  // candidate's percent-of-median target can be computed correctly.
+  const medianByExternalId = watch.targetMode === 'percent'
+    ? await fetchOverallPricesBatch(chunk.map(c => c.externalId))
+    : new Map();
+
+  let fired = 0;
+  const failures = [];
+  await mapWithConcurrency(chunk, FILTER_CONCURRENCY, async cand => {
+    let liveAuctions;
+    try {
+      ({ liveAuctions } = await fetchLiveAuctions(cand.gameSlug, cand.externalId, watch.platform));
+    } catch (e) {
+      failures.push(`${cand.name}: ${e.message}`);
+      return;
+    }
+    const med = medianByExternalId.get(cand.externalId)?.price?.[watch.platform] ?? null;
+    const target = effectiveTarget(watch, med);
+    // If percent-of-median is requested but we have no median, skip this candidate
+    // (otherwise we'd fall back to targetBin which may be wrong/unset).
+    if (watch.targetMode === 'percent' && target == null) return;
+
+    const matches = liveAuctions.filter(a => a.buyNowPrice != null && a.buyNowPrice <= target);
+    const cheapest = matches.reduce(
+      (m, a) => (m == null || a.buyNowPrice < m.buyNowPrice) ? a : m,
+      null
+    );
+    const prior = await loadLastAlerted(env, watch.id, cand.externalId);
+
+    // Re-arm if card is off-market entirely.
+    if (liveAuctions.length === 0 && prior != null) {
+      await clearLastAlerted(env, watch.id, cand.externalId);
+      return;
+    }
+    const beats = cheapest && (prior == null || cheapest.buyNowPrice < prior);
+    if (!beats) return;
+
+    const targetLabel = watch.targetMode === 'percent'
+      ? `≤ ${watch.targetPercent}% under median (${fmt(target)})`
+      : fmt(target);
+    await postDiscord(webhook, {
+      title: `🎯 ${cand.name} (${cand.program}) ${cand.ovr} OVR — ${PLATFORMS[watch.platform] || watch.platform}`,
+      body: `**BIN ${fmt(cheapest.buyNowPrice)}** · target ${targetLabel}${med != null ? ` · median ${fmt(med)}` : ''}\nFilter \`${watch.overallMin}-${watch.overallMax} OVR${watch.programFilter ? ' · ' + watch.programFilter : ''}\` · ends <t:${Math.floor(new Date(cheapest.endDate).getTime()/1000)}:R>${matches.length > 1 ? `\n*+${matches.length - 1} other listing(s) below target*` : ''}`,
+      url: `${MUTGG}${cand.url}#prices`,
+      color: 0xF5C518,
+      fields: [
+        { name: 'Bids',  value: String(cheapest.bidCount ?? 0), inline: true },
+        { name: 'Recur', value: watch.recurring ? 'Yes' : 'No', inline: true },
+      ],
+    });
+    await saveLastAlerted(env, watch.id, cand.externalId, cheapest.buyNowPrice);
+    fired++;
+    watch.lastAlertedAt = Date.now();
+    watch.lastAlertedName = cand.name;
+    watch.lastAlertedPrice = cheapest.buyNowPrice;
+  });
+
+  watch.cursor = nextCursor;
+  watch.lastChecked = Date.now();
+  watch.lastError = failures.length ? failures.slice(0, 2).join('; ') + (failures.length > 2 ? ` (+${failures.length - 2} more)` : '') : null;
+  return {
+    id: watch.id,
+    kind: 'filter',
+    chunkStart: start,
+    chunkSize: chunk.length,
+    fired,
+    failures: failures.length,
+    candidateCount: candidates.length,
+  };
+}
+
+// Fields that the polling loop updates on a watch. When we merge poll output back
+// into KV, ONLY these fields override the latest stored state — everything else
+// (target price, recurring, the watch's existence itself) reflects user edits
+// that may have happened during the long-running poll.
+const POLL_MANAGED_FIELDS = [
+  'lastChecked', 'lastError',
+  'lastAlertedAt', 'lastAlertedPrice', 'lastAlertedName',
+  'cursor',
+  'cachedCheapestBin', 'cachedMed', 'cachedSnapshotAt',
+];
+
+async function pollOnce(env) {
+  const webhook = env.DISCORD_WEBHOOK;
+  if (!webhook) return { skipped: 'no DISCORD_WEBHOOK secret' };
+
+  const watches = await loadWatches(env);
+  const allIds = Object.keys(watches);
+  const cardIds   = allIds.filter(id => (watches[id].kind || 'card') === 'card');
+  const filterIds = allIds.filter(id => watches[id].kind === 'filter');
+
+  const cardResult = cardIds.length
+    ? await pollCardWatches(env, watches, cardIds, webhook)
+    : { results: [], uniqueFetches: 0 };
+
+  const filterResults = [];
+  for (const id of filterIds) {
+    filterResults.push(await pollFilterWatch(env, watches[id], webhook));
+  }
+
+  // Concurrency-safe save: re-read the latest KV state and only overlay our
+  // poll-managed fields onto watches that still exist. This way a user delete
+  // (or target edit) that happened during this poll is preserved.
+  const fresh = await loadWatches(env);
+  for (const id of Object.keys(fresh)) {
+    const ours = watches[id];
+    if (!ours) continue;  // watch added by user during our poll — leave their version alone
+    for (const f of POLL_MANAGED_FIELDS) {
+      if (f in ours) fresh[id][f] = ours[f];
+    }
+  }
+  await saveWatches(env, fresh);
+
+  return {
+    polled: allIds.length,
+    cards: cardResult.results,
+    filters: filterResults,
+    uniqueCardFetches: cardResult.uniqueFetches,
+  };
 }
 
 // ---------- HTTP API ----------
@@ -228,34 +497,124 @@ async function handleApi(req, env, url) {
     return jsonResponse({ watches });
   }
 
-  // Add or update a watch
+  // Add or update a watch (card watch — by externalId+platform).
   if (req.method === 'POST' && path === '/api/watches') {
     const body = await req.json();
     const { externalId, gameSlug, url: playerUrl, name, program, ovr, platform, targetBin, recurring } = body;
     if (!externalId || !platform) return jsonResponse({ error: 'missing externalId or platform' }, { status: 400 });
+    const targetMode    = body.targetMode === 'percent' ? 'percent' : 'absolute';
+    const targetPercent = body.targetPercent == null ? null : Number(body.targetPercent);
     const id = `${externalId}-${platform}`;
     const watches = await loadWatches(env);
     watches[id] = {
-      id, externalId, gameSlug: gameSlug || '26', url: playerUrl, name, program, ovr,
+      id, kind: 'card',
+      externalId, gameSlug: gameSlug || '26', url: playerUrl, name, program, ovr,
       platform,
-      targetBin: targetBin == null ? null : Number(targetBin),
+      targetMode,
+      targetBin:     targetBin == null ? null : Number(targetBin),
+      targetPercent: Number.isFinite(targetPercent) ? targetPercent : null,
       recurring: !!recurring,
       lastChecked: watches[id]?.lastChecked || 0,
       lastError:   null,
       lastAlertedAt: watches[id]?.lastAlertedAt || null,
+      lastAlertedPrice: watches[id]?.lastAlertedPrice || null,
+      cachedCheapestBin: watches[id]?.cachedCheapestBin ?? null,
+      cachedMed:         watches[id]?.cachedMed ?? null,
+      cachedSnapshotAt:  watches[id]?.cachedSnapshotAt ?? null,
+    };
+    await saveWatches(env, watches);
+    return jsonResponse({ ok: true, watch: watches[id] });
+  }
+
+  // Create a filter watch (OVR range across all matching cards).
+  // Discovery is synchronous so the user knows immediately how many candidates exist.
+  if (req.method === 'POST' && path === '/api/watches/filter') {
+    const body = await req.json();
+    const overallMin = Number(body.overallMin);
+    const overallMax = Number(body.overallMax);
+    const platform   = body.platform;
+    const targetBin     = body.targetBin == null ? null : Number(body.targetBin);
+    const targetMode    = body.targetMode === 'percent' ? 'percent' : 'absolute';
+    const targetPercent = body.targetPercent == null ? null : Number(body.targetPercent);
+    const programFilter = (body.programFilter || '').trim();
+    const recurring     = !!body.recurring;
+    if (!Number.isFinite(overallMin) || !Number.isFinite(overallMax) || overallMin > overallMax) {
+      return jsonResponse({ error: 'invalid overallMin/overallMax' }, { status: 400 });
+    }
+    if (!platform) return jsonResponse({ error: 'missing platform' }, { status: 400 });
+    if (targetMode === 'absolute' && !Number.isFinite(targetBin)) {
+      return jsonResponse({ error: 'missing targetBin' }, { status: 400 });
+    }
+    if (targetMode === 'percent' && !Number.isFinite(targetPercent)) {
+      return jsonResponse({ error: 'missing targetPercent' }, { status: 400 });
+    }
+
+    // Different programs are different watches, so include programFilter in the id.
+    const programSlug = programFilter
+      ? '-' + programFilter.replace(/\W+/g, '_').toLowerCase()
+      : '';
+    const id = `filter-${overallMin}-${overallMax}-${platform}${programSlug}`;
+    const watches = await loadWatches(env);
+    const candidates = await discoverCandidates({ overallMin, overallMax, platform, programFilter });
+    await saveCandidates(env, id, candidates);
+
+    watches[id] = {
+      id, kind: 'filter',
+      overallMin, overallMax, platform,
+      programFilter,
+      targetMode,
+      targetBin:     Number.isFinite(targetBin)     ? targetBin     : null,
+      targetPercent: Number.isFinite(targetPercent) ? targetPercent : null,
+      recurring,
+      candidateCount: candidates.length,
+      candidatesUpdatedAt: Date.now(),
+      cursor: 0,
+      lastChecked: 0,
+      lastError: null,
+      lastAlertedAt: watches[id]?.lastAlertedAt || null,
+      lastAlertedName: watches[id]?.lastAlertedName || null,
       lastAlertedPrice: watches[id]?.lastAlertedPrice || null,
     };
     await saveWatches(env, watches);
     return jsonResponse({ ok: true, watch: watches[id] });
   }
 
-  // Delete a watch
+  // Manually re-discover candidates for a filter watch (e.g., after new content drops).
+  if (req.method === 'POST' && path.startsWith('/api/watches/') && path.endsWith('/refresh')) {
+    const id = decodeURIComponent(path.slice('/api/watches/'.length, -'/refresh'.length));
+    const watches = await loadWatches(env);
+    const w = watches[id];
+    if (!w || w.kind !== 'filter') return jsonResponse({ error: 'not a filter watch' }, { status: 404 });
+    const candidates = await discoverCandidates({
+      overallMin: w.overallMin, overallMax: w.overallMax, platform: w.platform,
+      programFilter: w.programFilter,
+    });
+    await saveCandidates(env, id, candidates);
+    w.candidateCount = candidates.length;
+    w.candidatesUpdatedAt = Date.now();
+    w.cursor = 0;
+    await saveWatches(env, watches);
+    return jsonResponse({ ok: true, candidateCount: candidates.length });
+  }
+
+  // Delete a watch (card or filter). Also clears any per-candidate alert state.
   if (req.method === 'DELETE' && path.startsWith('/api/watches/')) {
     const id = decodeURIComponent(path.slice('/api/watches/'.length));
     const watches = await loadWatches(env);
+    const wasFilter = watches[id]?.kind === 'filter';
     delete watches[id];
     await saveWatches(env, watches);
     await env.WATCHES.delete(`seen:${id}`);
+    if (wasFilter) {
+      await env.WATCHES.delete(`candidates:${id}`);
+      // Clear all per-candidate lastAlerted entries for this filter watch.
+      let cursor;
+      do {
+        const list = await env.WATCHES.list({ prefix: `la:${id}:`, cursor });
+        await Promise.all(list.keys.map(k => env.WATCHES.delete(k.name)));
+        cursor = list.list_complete ? null : list.cursor;
+      } while (cursor);
+    }
     return jsonResponse({ ok: true });
   }
 
@@ -267,12 +626,27 @@ async function handleApi(req, env, url) {
     return jsonResponse({ data });
   }
 
-  // Snapshot prices for one card (used to render BIN/MED on the alert log)
+  // Snapshot prices for one card (used to render BIN/MED on the alert log).
+  // Serves from the cached values stored on the watch by the cron poll when fresh,
+  // falling back to a live fetch only if the cache is stale (or missing).
   if (req.method === 'GET' && path === '/api/snapshot') {
     const externalId = url.searchParams.get('externalId');
     const platform   = url.searchParams.get('platform');
     const gameSlug   = url.searchParams.get('gameSlug') || '26';
     if (!externalId || !platform) return jsonResponse({ error: 'missing externalId/platform' }, { status: 400 });
+
+    // Try cache first (~3 min freshness window — cron polls every minute).
+    const watches = await loadWatches(env);
+    const cached = watches[`${externalId}-${platform}`];
+    if (cached && cached.cachedSnapshotAt && Date.now() - cached.cachedSnapshotAt < 180_000) {
+      return jsonResponse({
+        cheapestBin: cached.cachedCheapestBin ?? null,
+        med:         cached.cachedMed ?? null,
+        cached:      true,
+        ageMs:       Date.now() - cached.cachedSnapshotAt,
+      });
+    }
+
     try {
       const live = await fetchLiveAuctions(gameSlug, externalId, platform).catch(e => {
         return { liveAuctions: [], lastUpdate: null, _error: String(e.message || e) };
@@ -328,11 +702,59 @@ async function handleApi(req, env, url) {
   return jsonResponse({ error: 'not found' }, { status: 404 });
 }
 
+// ---------- daily candidate refresh ----------
+
+// Re-discovers candidate cards for every filter watch. Runs on its own daily cron
+// (08:00 UTC) so new program drops automatically get covered without the user
+// having to remember to click the ↻ refresh button.
+async function refreshAllFilterCandidates(env) {
+  const watches = await loadWatches(env);
+  const filterIds = Object.keys(watches).filter(id => watches[id].kind === 'filter');
+  if (filterIds.length === 0) return { refreshed: 0 };
+
+  const updates = {};   // { id: { candidateCount, candidatesUpdatedAt, cursor } }
+  for (const id of filterIds) {
+    const w = watches[id];
+    try {
+      const candidates = await discoverCandidates({
+        overallMin: w.overallMin, overallMax: w.overallMax, platform: w.platform,
+        programFilter: w.programFilter,
+      });
+      await saveCandidates(env, id, candidates);
+      updates[id] = {
+        candidateCount: candidates.length,
+        candidatesUpdatedAt: Date.now(),
+        // Don't reset cursor on auto-refresh — keep the rotation going from where
+        // it left off, just wrap if it now points past the new end.
+        cursor: w.cursor != null && w.cursor < candidates.length ? w.cursor : 0,
+      };
+    } catch (e) {
+      updates[id] = { lastError: `auto-refresh failed: ${e.message}` };
+    }
+  }
+
+  // Concurrency-safe merge (same pattern as pollOnce): re-read latest KV state and
+  // only overlay our refresh-managed fields on watches that still exist.
+  const fresh = await loadWatches(env);
+  for (const id of Object.keys(updates)) {
+    if (!fresh[id]) continue;  // user deleted it during refresh
+    Object.assign(fresh[id], updates[id]);
+  }
+  await saveWatches(env, fresh);
+  return { refreshed: filterIds.length };
+}
+
 // ---------- worker entrypoints ----------
 
 export default {
   async scheduled(event, env, ctx) {
-    ctx.waitUntil(pollOnce(env));
+    // Multiple cron schedules — dispatch by event.cron string.
+    if (event.cron === '0 8 * * *') {
+      ctx.waitUntil(refreshAllFilterCandidates(env));
+    } else {
+      // Default: the per-minute poll loop.
+      ctx.waitUntil(pollOnce(env));
+    }
   },
   async fetch(req, env) {
     const url = new URL(req.url);
@@ -367,6 +789,8 @@ button.danger { background:#5b1f1f; border-color:#7a2a2a; }
 button.pill { border-radius:999px; padding:6px 14px; font-size:11px; text-transform:uppercase; letter-spacing:.6px; font-weight:600; }
 button.pill.on { background:#1f5b3a; border-color:#2a7a4d; color:#7ed996; }
 button.pill.off { background:#1a2229; color:#9aa3ad; }
+button.tab { background:#1a2229; color:#9aa3ad; border:1px solid #2a3540; border-radius:6px; padding:6px 12px; font-size:12px; font-weight:600; }
+button.tab.on { background:#1a2229; color:#e7e9ea; border-color:#3FA9F5; }
 .alert {
   display:grid; grid-template-columns:auto 1fr auto; gap:14px; align-items:center;
   background:#11161a; border:1px solid #232b33; border-radius:10px; padding:14px 16px; margin-bottom:10px;
@@ -400,41 +824,116 @@ button.pill.off { background:#1a2229; color:#9aa3ad; }
 <p class="lede">Always-on. Polls mut.gg every minute. Pings Discord when BIN ≤ target.</p>
 
 <div class="card">
-  <div class="row" style="gap:12px;">
-    <div class="grow">
-      <label>Player</label>
-      <input id="f-name" placeholder="Tyreek Hill" autocomplete="off">
+  <div class="tabs" style="display:flex; gap:6px; margin-bottom:12px;">
+    <button class="tab on" data-mode="card" type="button">Specific card</button>
+    <button class="tab" data-mode="filter" type="button">OVR filter</button>
+  </div>
+
+  <!-- Card mode -->
+  <div id="mode-card">
+    <div class="row" style="gap:12px;">
+      <div class="grow">
+        <label>Player</label>
+        <input id="f-name" placeholder="Tyreek Hill" autocomplete="off">
+      </div>
+      <div style="flex:0 0 90px;">
+        <label>OVR (optional)</label>
+        <input id="f-ovr" type="number" inputmode="numeric" min="0" max="99" placeholder="any" autocomplete="off">
+      </div>
+      <div style="flex:1.3;">
+        <label>Program</label>
+        <select id="f-program"><option value="">— search a player first —</option></select>
+      </div>
     </div>
-    <div style="flex:0 0 90px;">
-      <label>OVR (optional)</label>
-      <input id="f-ovr" type="number" inputmode="numeric" min="0" max="99" placeholder="any" autocomplete="off">
+    <div class="row" style="gap:12px; margin-top:10px;">
+      <div style="flex:1;">
+        <label>Platform</label>
+        <select id="f-platform">
+          <option value="pc">PC</option>
+          <option value="xbox-series-x">Xbox Series X</option>
+          <option value="playstation-5">PlayStation 5</option>
+        </select>
+      </div>
+      <div style="flex:0 0 200px;">
+        <label>Alert when…</label>
+        <select id="f-mode">
+          <option value="absolute">Below coin price</option>
+          <option value="percent">% below median</option>
+        </select>
+      </div>
+      <div id="f-target-wrap" style="flex:1;">
+        <label>Target price (alert ≤)</label>
+        <input id="f-target" type="number" placeholder="400000">
+      </div>
+      <div id="f-percent-wrap" style="flex:1; display:none;">
+        <label>Discount % (alert ≤ median × (1 − %))</label>
+        <input id="f-percent" type="number" min="1" max="99" placeholder="30">
+      </div>
+      <div style="display:flex; flex-direction:column;">
+        <label>Recurring</label>
+        <button id="f-recurring" class="pill on" type="button">Yes</button>
+      </div>
     </div>
-    <div style="flex:1.3;">
-      <label>Program</label>
-      <select id="f-program"><option value="">— search a player first —</option></select>
+    <div class="row" style="margin-top:12px; justify-content:flex-end;">
+      <button id="btn-add" class="primary">Add watch</button>
     </div>
   </div>
-  <div class="row" style="gap:12px; margin-top:10px;">
-    <div style="flex:1;">
-      <label>Platform</label>
-      <select id="f-platform">
-        <option value="pc">PC</option>
-        <option value="xbox-series-x">Xbox Series X</option>
-        <option value="playstation-5">PlayStation 5</option>
-      </select>
+
+  <!-- Filter mode -->
+  <div id="mode-filter" style="display:none;">
+    <div class="row" style="gap:12px;">
+      <div style="flex:1;">
+        <label>OVR min</label>
+        <input id="ff-min" type="number" min="0" max="99" placeholder="96">
+      </div>
+      <div style="flex:1;">
+        <label>OVR max</label>
+        <input id="ff-max" type="number" min="0" max="99" placeholder="97">
+      </div>
+      <div style="flex:1.2;">
+        <label>Platform</label>
+        <select id="ff-platform">
+          <option value="pc">PC</option>
+          <option value="xbox-series-x">Xbox Series X</option>
+          <option value="playstation-5">PlayStation 5</option>
+        </select>
+      </div>
     </div>
-    <div style="flex:1;">
-      <label>Target price (alert ≤)</label>
-      <input id="f-target" type="number" placeholder="400000">
+    <div class="row" style="gap:12px; margin-top:10px;">
+      <div style="flex:2;">
+        <label>Program filter (optional)</label>
+        <input id="ff-program" placeholder="e.g. Sugar Rush — leave blank for all programs" autocomplete="off">
+      </div>
+      <div style="display:flex; flex-direction:column;">
+        <label>Recurring</label>
+        <button id="ff-recurring" class="pill on" type="button">Yes</button>
+      </div>
     </div>
-    <div style="display:flex; flex-direction:column;">
-      <label>Recurring</label>
-      <button id="f-recurring" class="pill on" type="button">Yes</button>
+    <div class="row" style="gap:12px; margin-top:10px;">
+      <div style="flex:0 0 220px;">
+        <label>Alert when…</label>
+        <select id="ff-mode">
+          <option value="absolute">BIN is below a coin price</option>
+          <option value="percent">BIN is % below median</option>
+        </select>
+      </div>
+      <div id="ff-target-wrap" style="flex:1;">
+        <label>Target price (alert ≤)</label>
+        <input id="ff-target" type="number" placeholder="125000">
+      </div>
+      <div id="ff-percent-wrap" style="flex:1; display:none;">
+        <label>Discount % (alert ≤ median × (1 − %))</label>
+        <input id="ff-percent" type="number" min="1" max="99" placeholder="30">
+      </div>
+    </div>
+    <div class="muted" style="margin-top:8px;">
+      Discovers every auctionable card in your OVR range (and program, if set), then polls in rotating chunks of 100 cards per minute. Full sweep for a typical range: ~4 minutes.
+    </div>
+    <div class="row" style="margin-top:12px; justify-content:flex-end;">
+      <button id="btn-add-filter" class="primary">Add filter watch</button>
     </div>
   </div>
-  <div class="row" style="margin-top:12px; justify-content:flex-end;">
-    <button id="btn-add" class="primary">Add watch</button>
-  </div>
+
   <div id="add-status" class="status"></div>
 </div>
 
@@ -465,6 +964,17 @@ async function api(path, opts = {}) {
   return await r.json();
 }
 
+// Tab switching between Specific Card and OVR Filter add modes.
+document.querySelectorAll('.tab').forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b === btn));
+    const mode = btn.dataset.mode;
+    $('#mode-card').style.display = mode === 'card' ? '' : 'none';
+    $('#mode-filter').style.display = mode === 'filter' ? '' : 'none';
+    $('#add-status').textContent = '';
+  };
+});
+
 let searchRaw = [];    // all cards returned for the current name query (pre-OVR filter)
 let searchCache = [];  // cards currently shown in dropdown (post-OVR filter); dropdown index = index here
 let recurring = true;
@@ -474,6 +984,23 @@ $('#f-recurring').onclick = () => {
   $('#f-recurring').classList.toggle('off', !recurring);
   $('#f-recurring').textContent = recurring ? 'Yes' : 'No';
 };
+
+let filterRecurring = true;
+$('#ff-recurring').onclick = () => {
+  filterRecurring = !filterRecurring;
+  $('#ff-recurring').classList.toggle('on', filterRecurring);
+  $('#ff-recurring').classList.toggle('off', !filterRecurring);
+  $('#ff-recurring').textContent = filterRecurring ? 'Yes' : 'No';
+};
+
+// Toggle target-price vs percent-of-median input visibility on both forms.
+function syncModeInputs(prefix) {
+  const mode = $('#' + prefix + 'mode').value;
+  $('#' + prefix + 'target-wrap').style.display  = mode === 'absolute' ? '' : 'none';
+  $('#' + prefix + 'percent-wrap').style.display = mode === 'percent'  ? '' : 'none';
+}
+$('#f-mode').addEventListener('change',  () => syncModeInputs('f-'));
+$('#ff-mode').addEventListener('change', () => syncModeInputs('ff-'));
 
 function renderProgramDropdown() {
   const sel = $('#f-program');
@@ -519,9 +1046,13 @@ $('#f-ovr').addEventListener('input', renderProgramDropdown);
 
 $('#btn-add').onclick = async () => {
   const idx = $('#f-program').value;
-  const target = parseInt(($('#f-target').value || '').replace(/[^\\d]/g,''), 10);
+  const mode = $('#f-mode').value;
+  const target  = parseInt(($('#f-target').value  || '').replace(/[^\\d]/g,''), 10);
+  const percent = parseInt(($('#f-percent').value || '').replace(/[^\\d]/g,''), 10);
   const status = $('#add-status'); status.className = 'status'; status.textContent = '';
   if (!searchCache[idx]) { status.className = 'status err'; status.textContent = 'Pick a player + program.'; return; }
+  if (mode === 'absolute' && !Number.isFinite(target))  { status.className = 'status err'; status.textContent = 'Set a target price.'; return; }
+  if (mode === 'percent'  && !Number.isFinite(percent)) { status.className = 'status err'; status.textContent = 'Set a discount %.'; return; }
   const p = searchCache[idx];
   status.innerHTML = '<span class="spinner"></span> Adding…';
   try {
@@ -529,12 +1060,50 @@ $('#btn-add').onclick = async () => {
       externalId: p.externalId, gameSlug: p.gameSlug, url: p.url,
       name: p.firstName + ' ' + p.lastName, program: p.program?.name, ovr: p.overall,
       platform: $('#f-platform').value,
-      targetBin: Number.isFinite(target) ? target : null,
+      targetMode: mode,
+      targetBin:     mode === 'absolute' ? target  : null,
+      targetPercent: mode === 'percent'  ? percent : null,
       recurring,
     })});
     status.className = 'status ok'; status.textContent = 'Added.';
-    $('#f-name').value = ''; $('#f-ovr').value = ''; $('#f-target').value = ''; $('#f-program').innerHTML = '<option value="">— search a player first —</option>';
+    $('#f-name').value = ''; $('#f-ovr').value = ''; $('#f-target').value = ''; $('#f-percent').value = '';
+    $('#f-program').innerHTML = '<option value="">— search a player first —</option>';
     searchRaw = []; searchCache = [];
+    refresh();
+  } catch (e) { status.className = 'status err'; status.textContent = 'Failed: ' + e.message; }
+};
+
+$('#btn-add-filter').onclick = async () => {
+  const overallMin = parseInt($('#ff-min').value, 10);
+  const overallMax = parseInt($('#ff-max').value, 10);
+  const platform   = $('#ff-platform').value;
+  const programFilter = $('#ff-program').value;
+  const mode      = $('#ff-mode').value;
+  const targetBin = parseInt(($('#ff-target').value  || '').replace(/[^\\d]/g,''), 10);
+  const percent   = parseInt(($('#ff-percent').value || '').replace(/[^\\d]/g,''), 10);
+  const status = $('#add-status'); status.className = 'status'; status.textContent = '';
+  if (!Number.isFinite(overallMin) || !Number.isFinite(overallMax) || overallMin > overallMax) {
+    status.className = 'status err'; status.textContent = 'Set a valid OVR range (min ≤ max, 0–99).'; return;
+  }
+  if (mode === 'absolute' && !Number.isFinite(targetBin)) {
+    status.className = 'status err'; status.textContent = 'Set a target price.'; return;
+  }
+  if (mode === 'percent' && !Number.isFinite(percent)) {
+    status.className = 'status err'; status.textContent = 'Set a discount %.'; return;
+  }
+  status.innerHTML = '<span class="spinner"></span> Discovering candidate cards… (this can take ~10 seconds)';
+  try {
+    const r = await api('/api/watches/filter', { method: 'POST', body: JSON.stringify({
+      overallMin, overallMax, platform,
+      programFilter,
+      targetMode: mode,
+      targetBin:     mode === 'absolute' ? targetBin : null,
+      targetPercent: mode === 'percent'  ? percent   : null,
+      recurring: filterRecurring,
+    })});
+    status.className = 'status ok';
+    status.textContent = 'Added. ' + r.watch.candidateCount + ' candidate cards will rotate through polling.';
+    $('#ff-min').value = ''; $('#ff-max').value = ''; $('#ff-target').value = ''; $('#ff-percent').value = ''; $('#ff-program').value = '';
     refresh();
   } catch (e) { status.className = 'status err'; status.textContent = 'Failed: ' + e.message; }
 };
@@ -568,15 +1137,78 @@ async function refresh() {
   for (const id of ids) {
     const w = watches[id];
     const card = document.createElement('div'); card.className = 'alert';
+
+    if (w.kind === 'filter') {
+      // Filter watch row: no single player; summarize the OVR range.
+      const swept = w.candidateCount ? Math.round((w.cursor || 0) / w.candidateCount * 100) : 0;
+      const targetDisplay = w.targetMode === 'percent' ? (w.targetPercent + '% off') : fmt(w.targetBin);
+      const subParts = [
+        PLATFORMS[w.platform] || w.platform,
+        (w.candidateCount ?? '?') + ' candidate cards',
+      ];
+      if (w.programFilter) subParts.push('program: ' + w.programFilter);
+      card.innerHTML = \`
+        <div class="ovr">\${w.overallMin}–\${w.overallMax}</div>
+        <div>
+          <div><span class="meta-name">FILTER · \${w.overallMin}-\${w.overallMax} OVR\${w.programFilter ? ' · ' + w.programFilter.toUpperCase() : ''}</span></div>
+          <div class="sub">\${subParts.join(' · ')}</div>
+          <div class="prices">
+            <div class="price target"><div class="v">\${targetDisplay}</div><div class="l">TARGET</div></div>
+            <div class="price med"><div class="v">\${swept}%</div><div class="l">Sweep</div></div>
+          </div>
+          <div style="margin-top:8px;">
+            <button class="pill \${w.recurring?'on':'off'}" data-action="rec">\${w.recurring?'RECURRING':'ONE-SHOT'}</button>
+            \${w.lastAlertedAt ? '<span class="alerted-at">Last alert: ' + (w.lastAlertedName ? w.lastAlertedName + ' @ ' + fmt(w.lastAlertedPrice) + ' · ' : '') + new Date(w.lastAlertedAt).toLocaleString() + '</span>' : ''}
+          </div>
+          \${w.lastError ? '<div class="status err">⚠️ ' + w.lastError + '</div>' : ''}
+        </div>
+        <div class="actions">
+          <button class="iconbtn edit" title="Re-discover candidates" data-action="refresh">↻</button>
+          <button class="iconbtn del" title="Remove" data-action="del">✕</button>
+        </div>
+      \`;
+      card.querySelector('[data-action=rec]').onclick = async () => {
+        await api('/api/watches/filter', { method: 'POST', body: JSON.stringify({
+          overallMin: w.overallMin, overallMax: w.overallMax, platform: w.platform,
+          programFilter: w.programFilter || '',
+          targetMode: w.targetMode || 'absolute',
+          targetBin: w.targetBin, targetPercent: w.targetPercent,
+          recurring: !w.recurring,
+        })});
+        refresh();
+      };
+      card.querySelector('[data-action=refresh]').onclick = async () => {
+        const r = await api('/api/watches/' + encodeURIComponent(w.id) + '/refresh', { method: 'POST' });
+        alert('Re-discovered ' + r.candidateCount + ' candidates.');
+        refresh();
+      };
+      card.querySelector('[data-action=del]').onclick = async () => {
+        if (!confirm('Remove filter watch ' + w.overallMin + '-' + w.overallMax + ' OVR (' + w.platform + ')?')) return;
+        await api('/api/watches/' + encodeURIComponent(w.id), { method: 'DELETE' });
+        refresh();
+      };
+      log.appendChild(card);
+      continue;
+    }
+
+    // Card watch row.
+    // Prefer cached snapshot values from the cron poll — avoids extra mut.gg fetches
+    // from the UI (which was triggering the "..." display via rate-limited fetches).
+    const cachedBin = w.cachedCheapestBin;
+    const cachedMed = w.cachedMed;
+    const haveCache = w.cachedSnapshotAt != null;
+    const targetDisplay = w.targetMode === 'percent' && cachedMed != null
+      ? fmt(Math.floor(cachedMed * (1 - (w.targetPercent || 0) / 100)))
+      : (w.targetMode === 'percent' ? (w.targetPercent + '% off') : fmt(w.targetBin));
     card.innerHTML = \`
       <div class="ovr">\${w.ovr ?? '?'}</div>
       <div>
         <div><span class="meta-name">\${w.name?.toUpperCase()}</span></div>
         <div class="sub">\${w.program} · \${PLATFORMS[w.platform] || w.platform}</div>
         <div class="prices">
-          <div class="price bin"><div class="v" data-k="bin">…</div><div class="l">BIN</div></div>
-          <div class="price med"><div class="v" data-k="med">…</div><div class="l">MED</div></div>
-          <div class="price target"><div class="v">\${fmt(w.targetBin)}</div><div class="l">TARGET</div></div>
+          <div class="price bin"><div class="v" data-k="bin">\${haveCache ? fmt(cachedBin) : '…'}</div><div class="l">BIN</div></div>
+          <div class="price med"><div class="v" data-k="med">\${haveCache ? fmt(cachedMed) : '…'}</div><div class="l">MED</div></div>
+          <div class="price target"><div class="v">\${targetDisplay}</div><div class="l">TARGET</div></div>
         </div>
         <div style="margin-top:8px;">
           <button class="pill \${w.recurring?'on':'off'}" data-action="rec">\${w.recurring?'RECURRING':'ONE-SHOT'}</button>
@@ -598,11 +1230,14 @@ async function refresh() {
       refresh();
     };
     log.appendChild(card);
-    // Fire snapshot in background
-    snapshot(w).then(s => {
-      card.querySelector('[data-k=bin]').textContent = fmt(s.cheapestBin);
-      card.querySelector('[data-k=med]').textContent = fmt(s.med);
-    });
+    // Cache miss (newly added watch hasn't been polled yet) — fetch live once
+    // so the user doesn't stare at "..." for a full minute.
+    if (!haveCache) {
+      snapshot(w).then(s => {
+        card.querySelector('[data-k=bin]').textContent = fmt(s.cheapestBin);
+        card.querySelector('[data-k=med]').textContent = fmt(s.med);
+      });
+    }
   }
 }
 
