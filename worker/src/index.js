@@ -198,8 +198,11 @@ function parsePlayerTiles(html) {
 }
 
 // Paginate mut.gg's HTML /players/ index and collect all auctionable cards in the
-// given OVR range. Optionally narrows by program name (substring match).
-async function discoverCandidates({ overallMin, overallMax, platform, programFilter, excludePrograms }) {
+// given OVR range. Optional narrowing:
+//   - programFilter: substring match on program name (include only)
+//   - excludePrograms: exact-name list of programs to skip entirely
+//   - excludeExternalIds: list of specific card externalIds to skip
+async function discoverCandidates({ overallMin, overallMax, platform, programFilter, excludePrograms, excludeExternalIds }) {
   const market = MARKET_BY_PLATFORM[platform] || '3';
   const baseQS = `overall__gte=${overallMin}&overall__lte=${overallMax}&market=${market}`;
   const all = [];
@@ -226,13 +229,16 @@ async function discoverCandidates({ overallMin, overallMax, platform, programFil
     if (newOnPage === 0) break;  // page returned only dupes — past the end
   }
 
-  // Filters: programFilter (substring include), excludePrograms (exact-name exclude list)
+  // Filters: programFilter (substring include), excludePrograms (exact-name exclude
+  // list, case-insensitive), excludeExternalIds (specific card ids to skip)
   const pf = (programFilter || '').toLowerCase().trim();
-  const exclude = new Set((excludePrograms || []).map(p => p.toLowerCase()));
+  const excludeProg = new Set((excludePrograms || []).map(p => p.toLowerCase()));
+  const excludeIds  = new Set((excludeExternalIds || []).map(Number));
   return all.filter(c => {
+    if (excludeIds.has(c.externalId)) return false;
     const prog = (c.program || '').toLowerCase();
     if (pf && !prog.includes(pf)) return false;
-    if (exclude.has(prog)) return false;
+    if (excludeProg.has(prog)) return false;
     return true;
   });
 }
@@ -602,6 +608,12 @@ async function handleApi(req, env, url) {
       excludePrograms = excludePrograms.split(',').map(s => s.trim()).filter(Boolean);
     }
     if (!Array.isArray(excludePrograms)) excludePrograms = [];
+    let excludeExternalIds = body.excludeExternalIds;
+    if (typeof excludeExternalIds === 'string') {
+      excludeExternalIds = excludeExternalIds.split(/[,\s]+/).map(Number).filter(Number.isFinite);
+    }
+    if (!Array.isArray(excludeExternalIds)) excludeExternalIds = [];
+    excludeExternalIds = excludeExternalIds.map(Number).filter(Number.isFinite);
     const recurring     = !!body.recurring;
     if (!Number.isFinite(overallMin) || !Number.isFinite(overallMax) || overallMin > overallMax) {
       return jsonResponse({ error: 'invalid overallMin/overallMax' }, { status: 400 });
@@ -620,7 +632,7 @@ async function handleApi(req, env, url) {
       : '';
     const id = `filter-${overallMin}-${overallMax}-${platform}${programSlug}`;
     const watches = await loadWatches(env);
-    const candidates = await discoverCandidates({ overallMin, overallMax, platform, programFilter, excludePrograms });
+    const candidates = await discoverCandidates({ overallMin, overallMax, platform, programFilter, excludePrograms, excludeExternalIds });
     await saveCandidates(env, id, candidates);
 
     watches[id] = {
@@ -628,6 +640,7 @@ async function handleApi(req, env, url) {
       overallMin, overallMax, platform,
       programFilter,
       excludePrograms,
+      excludeExternalIds,
       targetMode,
       targetBin:     Number.isFinite(targetBin)     ? targetBin     : null,
       targetPercent: Number.isFinite(targetPercent) ? targetPercent : null,
@@ -645,6 +658,84 @@ async function handleApi(req, env, url) {
     return jsonResponse({ ok: true, watch: watches[id] });
   }
 
+  // Update only the exclusion lists on a filter watch (without re-supplying full config).
+  // Body: { excludePrograms?, excludeExternalIds? }. Either string CSV or array.
+  // Re-discovers candidates synchronously so the user sees the new count immediately.
+  if (req.method === 'POST' && path.startsWith('/api/watches/') && path.endsWith('/exclusions')) {
+    const id = decodeURIComponent(path.slice('/api/watches/'.length, -'/exclusions'.length));
+    const body = await req.json();
+    const watches = await loadWatches(env);
+    const w = watches[id];
+    if (!w || w.kind !== 'filter') return jsonResponse({ error: 'not a filter watch' }, { status: 404 });
+
+    let excludePrograms = body.excludePrograms;
+    if (typeof excludePrograms === 'string') excludePrograms = excludePrograms.split(',').map(s => s.trim()).filter(Boolean);
+    if (Array.isArray(excludePrograms)) w.excludePrograms = excludePrograms;
+
+    let excludeExternalIds = body.excludeExternalIds;
+    if (typeof excludeExternalIds === 'string') excludeExternalIds = excludeExternalIds.split(/[,\s]+/).map(Number).filter(Number.isFinite);
+    if (Array.isArray(excludeExternalIds)) w.excludeExternalIds = excludeExternalIds.map(Number).filter(Number.isFinite);
+
+    const candidates = await discoverCandidates({
+      overallMin: w.overallMin, overallMax: w.overallMax, platform: w.platform,
+      programFilter: w.programFilter,
+      excludePrograms: w.excludePrograms,
+      excludeExternalIds: w.excludeExternalIds,
+    });
+    await saveCandidates(env, id, candidates);
+    w.candidateCount = candidates.length;
+    w.candidatesUpdatedAt = Date.now();
+    w.cursor = 0;
+    await saveWatches(env, watches);
+    return jsonResponse({
+      ok: true,
+      candidateCount: candidates.length,
+      excludePrograms: w.excludePrograms || [],
+      excludeExternalIds: w.excludeExternalIds || [],
+    });
+  }
+
+  // List the candidate cards currently being polled by a filter watch (post-filter view).
+  // Returns the cached candidate list — what the cron actually polls.
+  if (req.method === 'GET' && path.startsWith('/api/watches/') && path.endsWith('/candidates')) {
+    const id = decodeURIComponent(path.slice('/api/watches/'.length, -'/candidates'.length));
+    const watches = await loadWatches(env);
+    const w = watches[id];
+    if (!w || w.kind !== 'filter') return jsonResponse({ error: 'not a filter watch' }, { status: 404 });
+    const candidates = await loadCandidates(env, id) || [];
+    return jsonResponse({
+      candidates,
+      excludePrograms:    w.excludePrograms || [],
+      excludeExternalIds: w.excludeExternalIds || [],
+      watch: {
+        overallMin: w.overallMin, overallMax: w.overallMax, platform: w.platform,
+        programFilter: w.programFilter, recurring: w.recurring,
+      },
+    });
+  }
+
+  // List ALL candidates that would match the watch's discovery query if NO exclusions
+  // were applied — useful for the picker page (shows everything, lets user toggle).
+  if (req.method === 'GET' && path.startsWith('/api/watches/') && path.endsWith('/all-candidates')) {
+    const id = decodeURIComponent(path.slice('/api/watches/'.length, -'/all-candidates'.length));
+    const watches = await loadWatches(env);
+    const w = watches[id];
+    if (!w || w.kind !== 'filter') return jsonResponse({ error: 'not a filter watch' }, { status: 404 });
+    const candidates = await discoverCandidates({
+      overallMin: w.overallMin, overallMax: w.overallMax, platform: w.platform,
+      programFilter: w.programFilter,
+    });
+    return jsonResponse({
+      candidates,
+      excludePrograms:    w.excludePrograms || [],
+      excludeExternalIds: w.excludeExternalIds || [],
+      watch: {
+        overallMin: w.overallMin, overallMax: w.overallMax, platform: w.platform,
+        programFilter: w.programFilter, recurring: w.recurring,
+      },
+    });
+  }
+
   // Manually re-discover candidates for a filter watch (e.g., after new content drops).
   if (req.method === 'POST' && path.startsWith('/api/watches/') && path.endsWith('/refresh')) {
     const id = decodeURIComponent(path.slice('/api/watches/'.length, -'/refresh'.length));
@@ -655,6 +746,7 @@ async function handleApi(req, env, url) {
       overallMin: w.overallMin, overallMax: w.overallMax, platform: w.platform,
       programFilter: w.programFilter,
       excludePrograms: w.excludePrograms,
+      excludeExternalIds: w.excludeExternalIds,
     });
     await saveCandidates(env, id, candidates);
     w.candidateCount = candidates.length;
@@ -787,6 +879,7 @@ async function refreshAllFilterCandidates(env) {
         overallMin: w.overallMin, overallMax: w.overallMax, platform: w.platform,
         programFilter: w.programFilter,
         excludePrograms: w.excludePrograms,
+        excludeExternalIds: w.excludeExternalIds,
       });
       await saveCandidates(env, id, candidates);
       updates[id] = {
@@ -827,6 +920,9 @@ export default {
   async fetch(req, env) {
     const url = new URL(req.url);
     if (url.pathname.startsWith('/api/')) return handleApi(req, env, url);
+    if (url.pathname.startsWith('/manage/')) {
+      return new Response(MANAGE_HTML, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+    }
     // Everything else: serve the UI shell. UI handles auth client-side via prompt.
     return new Response(UI_HTML, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
   },
@@ -1242,6 +1338,7 @@ async function refresh() {
           \${w.lastError ? '<div class="status err">⚠️ ' + w.lastError + '</div>' : ''}
         </div>
         <div class="actions">
+          <a class="iconbtn edit" title="Manage exclusions" href="/manage/\${encodeURIComponent(w.id)}" style="text-decoration:none;text-align:center;line-height:34px;">✎</a>
           <button class="iconbtn edit" title="Re-discover candidates" data-action="refresh">↻</button>
           <button class="iconbtn del" title="Remove" data-action="del">✕</button>
         </div>
@@ -1251,6 +1348,7 @@ async function refresh() {
           overallMin: w.overallMin, overallMax: w.overallMax, platform: w.platform,
           programFilter: w.programFilter || '',
           excludePrograms: w.excludePrograms || [],
+          excludeExternalIds: w.excludeExternalIds || [],
           targetMode: w.targetMode || 'absolute',
           targetBin: w.targetBin, targetPercent: w.targetPercent,
           recurring: !w.recurring,
@@ -1323,5 +1421,257 @@ async function refresh() {
 
 refresh();
 setInterval(refresh, 60_000);  // refresh card view every 60s; cron polls every minute independently
+</script>
+</body></html>`;
+
+// ---------- /manage/:watchId — interactive exclusion picker ----------
+
+const MANAGE_HTML = `<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Manage Exclusions — MUT.GG Auction Alerts</title>
+<style>
+:root { color-scheme: dark; }
+* { box-sizing: border-box; }
+body { background:#0b0f12; color:#e7e9ea; font:14px/1.45 system-ui,sans-serif; margin:0; padding:24px; max-width:1100px; margin-inline:auto; }
+h1 { font-size:20px; margin:0 0 4px; }
+.lede { color:#9aa3ad; margin:0 0 16px; font-size:13px; }
+.back { color:#7ed996; text-decoration:none; font-size:12px; }
+.bar {
+  display:flex; gap:12px; align-items:center; flex-wrap:wrap;
+  position:sticky; top:0; padding:10px 14px; background:#11161a;
+  border:1px solid #232b33; border-radius:8px; margin-bottom:16px; z-index:5;
+}
+.stat { color:#9aa3ad; font-size:12px; }
+.stat b { color:#e7e9ea; font-weight:600; }
+input[type=search] { background:#1a2229; color:#e7e9ea; border:1px solid #2a3540; border-radius:6px; padding:6px 10px; font:inherit; min-width:220px; }
+button { background:#1a2229; color:#e7e9ea; border:1px solid #2a3540; border-radius:6px; padding:7px 12px; font:inherit; cursor:pointer; }
+button.primary { background:#1f5b3a; border-color:#2a7a4d; font-weight:600; }
+button.primary:hover { background:#2a7a4d; }
+button.danger { background:#5b1f1f; border-color:#7a2a2a; }
+button:disabled { opacity:.5; cursor:default; }
+.prog {
+  background:#11161a; border:1px solid #232b33; border-radius:8px;
+  padding:10px 14px; margin-bottom:10px;
+}
+.prog header {
+  display:flex; align-items:center; gap:10px; cursor:pointer; user-select:none;
+}
+.prog h2 { font-size:14px; margin:0; font-weight:600; }
+.prog .count { color:#9aa3ad; font-size:11px; margin-left:auto; }
+.prog .indicator { color:#677079; transition:transform 0.15s; }
+.prog.open .indicator { transform:rotate(90deg); }
+.prog .body { display:none; margin-top:10px; }
+.prog.open .body { display:block; }
+.prog.excluded { opacity:.45; }
+.prog.excluded h2 { text-decoration:line-through; }
+.card-row {
+  display:grid; grid-template-columns:auto 36px 1fr 100px 100px; gap:10px; align-items:center;
+  padding:5px 4px; border-top:1px solid #1a2229;
+}
+.card-row:first-child { border-top:none; }
+.card-row.excluded label { opacity:.45; text-decoration:line-through; }
+.card-row .ovr { font:italic 700 14px monospace; color:#9aa3ad; text-align:center; }
+.card-row .name { font-size:13px; }
+.card-row .arch { color:#9aa3ad; font-size:11px; }
+.card-row .id   { color:#677079; font-size:10px; font-family:ui-monospace,monospace; text-align:right; }
+input[type=checkbox] { width:16px; height:16px; cursor:pointer; }
+.empty { color:#677079; text-align:center; padding:48px; font-size:13px; }
+.spinner { display:inline-block; width:14px; height:14px; border:2px solid #2a3540; border-top-color:#7ed996; border-radius:50%; animation:spin 0.8s linear infinite; vertical-align:middle; }
+@keyframes spin { to { transform:rotate(360deg); } }
+.toast { position:fixed; bottom:20px; right:20px; background:#1f5b3a; color:#fff; padding:10px 14px; border-radius:8px; opacity:0; transition:opacity 0.2s; z-index:100; }
+.toast.show { opacity:1; }
+.toast.err { background:#5b1f1f; }
+</style>
+</head><body>
+
+<a href="/" class="back">← back to main</a>
+<h1 id="title">Manage exclusions</h1>
+<p class="lede" id="lede">Loading…</p>
+
+<div class="bar">
+  <input id="search" type="search" placeholder="Filter by name, program, position…">
+  <div class="stat"><b id="totalCount">—</b> total · <b id="activeCount">—</b> active · <b id="excludedCount">—</b> excluded</div>
+  <span style="flex:1"></span>
+  <button id="expandAll" type="button">Expand all</button>
+  <button id="collapseAll" type="button">Collapse all</button>
+  <button id="save" class="primary" type="button" disabled>Save exclusions</button>
+</div>
+
+<div id="programs"></div>
+<div id="toast" class="toast"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+
+function auth() {
+  let s = localStorage.getItem('mutgg.auth');
+  if (!s) { s = prompt('Enter AUTH_SECRET (set via wrangler):') || ''; if (s) localStorage.setItem('mutgg.auth', s); }
+  return s;
+}
+
+async function api(path, opts={}) {
+  const r = await fetch(path, { ...opts, headers: { 'X-Auth': auth(), 'Content-Type': 'application/json', ...(opts.headers || {}) } });
+  if (r.status === 401) { localStorage.removeItem('mutgg.auth'); throw new Error('unauthorized'); }
+  return await r.json();
+}
+
+function toast(msg, isErr) {
+  const t = $('#toast');
+  t.textContent = msg;
+  t.classList.toggle('err', !!isErr);
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+const watchId = decodeURIComponent(location.pathname.replace('/manage/', ''));
+let cards = [];           // all candidates ignoring exclusions
+let excludedIds = new Set();
+let excludedPrograms = new Set();
+let dirty = false;
+
+function setDirty(d) { dirty = d; $('#save').disabled = !d; }
+
+function programsOf(cards) {
+  const map = new Map();
+  for (const c of cards) {
+    if (!map.has(c.program)) map.set(c.program, []);
+    map.get(c.program).push(c);
+  }
+  // sort by program size desc
+  return [...map.entries()].sort((a, b) => b[1].length - a[1].length);
+}
+
+function updateCounts() {
+  const active = cards.filter(c => !excludedIds.has(c.externalId) && !excludedPrograms.has(c.program.toLowerCase())).length;
+  $('#totalCount').textContent = cards.length;
+  $('#activeCount').textContent = active;
+  $('#excludedCount').textContent = cards.length - active;
+}
+
+function render() {
+  const groups = programsOf(cards);
+  const root = $('#programs');
+  root.innerHTML = '';
+  for (const [prog, cs] of groups) {
+    const isProgExcl = excludedPrograms.has(prog.toLowerCase());
+    const activeInProg = cs.filter(c => !excludedIds.has(c.externalId)).length;
+    const sec = document.createElement('section');
+    sec.className = 'prog' + (isProgExcl ? ' excluded' : '');
+    sec.dataset.program = prog.toLowerCase();
+    sec.innerHTML = \`
+      <header>
+        <span class="indicator">▶</span>
+        <input type="checkbox" class="prog-check" \${isProgExcl ? '' : 'checked'} title="Uncheck to exclude this entire program">
+        <h2>\${prog}</h2>
+        <span class="count">\${activeInProg}/\${cs.length} active</span>
+      </header>
+      <div class="body"></div>
+    \`;
+    const body = sec.querySelector('.body');
+    for (const c of cs) {
+      const excluded = excludedIds.has(c.externalId) || isProgExcl;
+      const row = document.createElement('div');
+      row.className = 'card-row' + (excluded ? ' excluded' : '');
+      row.innerHTML = \`
+        <input type="checkbox" class="card-check" data-id="\${c.externalId}" \${excluded ? '' : 'checked'} \${isProgExcl ? 'disabled' : ''}>
+        <span class="ovr">\${c.ovr}</span>
+        <label>\${c.firstName ? (c.firstName + ' ' + c.lastName) : c.name}</label>
+        <span class="arch">\${c.archetype || ''}</span>
+        <span class="id">\${c.externalId}</span>
+      \`;
+      body.appendChild(row);
+    }
+    // Header click toggles expand
+    sec.querySelector('header').addEventListener('click', e => {
+      if (e.target.tagName === 'INPUT') return;
+      sec.classList.toggle('open');
+    });
+    sec.querySelector('.prog-check').addEventListener('change', e => {
+      const checked = e.target.checked;
+      if (checked) excludedPrograms.delete(prog.toLowerCase());
+      else excludedPrograms.add(prog.toLowerCase());
+      setDirty(true);
+      render();
+    });
+    body.querySelectorAll('.card-check').forEach(cb => {
+      cb.addEventListener('change', e => {
+        const id = Number(e.target.dataset.id);
+        if (e.target.checked) excludedIds.delete(id);
+        else excludedIds.add(id);
+        setDirty(true);
+        updateCounts();
+        e.target.closest('.card-row').classList.toggle('excluded', !e.target.checked);
+        // update the program's active count label
+        const totalInProg = cs.length;
+        const activeNow = cs.filter(c => !excludedIds.has(c.externalId)).length;
+        sec.querySelector('.count').textContent = activeNow + '/' + totalInProg + ' active';
+      });
+    });
+    root.appendChild(sec);
+  }
+  applyFilter();
+  updateCounts();
+}
+
+function applyFilter() {
+  const q = $('#search').value.trim().toLowerCase();
+  for (const sec of document.querySelectorAll('.prog')) {
+    let anyVisible = false;
+    for (const row of sec.querySelectorAll('.card-row')) {
+      const text = row.textContent.toLowerCase();
+      const match = !q || text.includes(q);
+      row.style.display = match ? '' : 'none';
+      if (match) anyVisible = true;
+    }
+    sec.style.display = anyVisible ? '' : 'none';
+    if (q && anyVisible) sec.classList.add('open');
+  }
+}
+$('#search').addEventListener('input', applyFilter);
+$('#expandAll').onclick = () => document.querySelectorAll('.prog').forEach(s => s.classList.add('open'));
+$('#collapseAll').onclick = () => document.querySelectorAll('.prog').forEach(s => s.classList.remove('open'));
+
+$('#save').onclick = async () => {
+  const btn = $('#save');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Saving…';
+  try {
+    const r = await api('/api/watches/' + encodeURIComponent(watchId) + '/exclusions', {
+      method: 'POST',
+      body: JSON.stringify({
+        excludePrograms: [...excludedPrograms],
+        excludeExternalIds: [...excludedIds],
+      }),
+    });
+    toast('Saved · ' + r.candidateCount + ' active cards');
+    dirty = false;
+    btn.innerHTML = 'Save exclusions';
+  } catch (e) {
+    toast('Save failed: ' + e.message, true);
+    btn.innerHTML = 'Save exclusions';
+    btn.disabled = false;
+  }
+};
+
+window.addEventListener('beforeunload', e => {
+  if (dirty) { e.preventDefault(); e.returnValue = ''; }
+});
+
+(async function load() {
+  try {
+    const r = await api('/api/watches/' + encodeURIComponent(watchId) + '/all-candidates');
+    cards = r.candidates;
+    excludedIds = new Set((r.excludeExternalIds || []).map(Number));
+    excludedPrograms = new Set((r.excludePrograms || []).map(p => p.toLowerCase()));
+    const w = r.watch || {};
+    $('#title').textContent = 'Manage exclusions · ' + w.overallMin + '–' + w.overallMax + ' OVR · ' + (w.platform || '?');
+    $('#lede').innerHTML = cards.length + ' total candidates' + (w.programFilter ? ' (program filter: <b>' + w.programFilter + '</b>)' : '') + '. Uncheck cards or programs to skip them; the cron will stop polling those once you Save.';
+    render();
+  } catch (e) {
+    $('#programs').innerHTML = '<div class="empty">Error: ' + e.message + '</div>';
+  }
+})();
 </script>
 </body></html>`;
