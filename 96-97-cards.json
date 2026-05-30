@@ -1,0 +1,3770 @@
+[
+  {
+    "externalId": 114102960,
+    "ovr": 97,
+    "firstName": "Chris",
+    "lastName": "McAlister",
+    "program": "Ultimate Legends",
+    "archetype": "WR - Physical"
+  },
+  {
+    "externalId": 114100475,
+    "ovr": 97,
+    "firstName": "Randall",
+    "lastName": "McDaniel",
+    "program": "Ultimate Legends",
+    "archetype": "TE - Possession"
+  },
+  {
+    "externalId": 95000009,
+    "ovr": 97,
+    "firstName": "Reggie",
+    "lastName": "Nelson",
+    "program": "Theme Team Surge",
+    "archetype": "SS - Zone"
+  },
+  {
+    "externalId": 95300003,
+    "ovr": 97,
+    "firstName": "LaDainian",
+    "lastName": "Tomlinson",
+    "program": "Theme Team Surge",
+    "archetype": "QB - Scrambler"
+  },
+  {
+    "externalId": 95300004,
+    "ovr": 97,
+    "firstName": "Darnell",
+    "lastName": "Washington",
+    "program": "Theme Team Surge",
+    "archetype": "SAM - Run Stopper"
+  },
+  {
+    "externalId": 115102454,
+    "ovr": 97,
+    "firstName": "Stefon",
+    "lastName": "Diggs",
+    "program": "Flashbacks",
+    "archetype": "WR - Slot"
+  },
+  {
+    "externalId": 115117643,
+    "ovr": 97,
+    "firstName": "Hunter",
+    "lastName": "Henry",
+    "program": "Flashbacks",
+    "archetype": "TE - Possession"
+  },
+  {
+    "externalId": 115113082,
+    "ovr": 97,
+    "firstName": "Roquan",
+    "lastName": "Smith",
+    "program": "Flashbacks",
+    "archetype": "MIKE - Field General"
+  },
+  {
+    "externalId": 115120547,
+    "ovr": 97,
+    "firstName": "Quinnen",
+    "lastName": "Williams",
+    "program": "Flashbacks",
+    "archetype": "DT - Nose Tackle"
+  },
+  {
+    "externalId": 112902661,
+    "ovr": 97,
+    "firstName": "Trent",
+    "lastName": "Brown",
+    "program": "Collector's Series",
+    "archetype": "RT - Power"
+  },
+  {
+    "externalId": 112913167,
+    "ovr": 97,
+    "firstName": "Justin",
+    "lastName": "Reid",
+    "program": "Collector's Series",
+    "archetype": "SS - Run Support"
+  },
+  {
+    "externalId": 114117416,
+    "ovr": 97,
+    "firstName": "Tommie",
+    "lastName": "Harris",
+    "program": "Ultimate Legends",
+    "archetype": "FB - Utility"
+  },
+  {
+    "externalId": 114105351,
+    "ovr": 97,
+    "firstName": "John",
+    "lastName": "Riggins",
+    "program": "Ultimate Legends",
+    "archetype": "QB - Scrambler"
+  },
+  {
+    "externalId": 95000007,
+    "ovr": 97,
+    "firstName": "Melvin",
+    "lastName": "Gordon III",
+    "program": "Theme Team Surge",
+    "archetype": "HB - Elusive Back"
+  },
+  {
+    "externalId": 95200004,
+    "ovr": 97,
+    "firstName": "Colston",
+    "lastName": "Loveland",
+    "program": "Theme Team Surge",
+    "archetype": "FS - Hybrid"
+  },
+  {
+    "externalId": 95200003,
+    "ovr": 97,
+    "firstName": "Dan",
+    "lastName": "Skipper",
+    "program": "Theme Team Surge",
+    "archetype": "WR - Physical"
+  },
+  {
+    "externalId": 115120492,
+    "ovr": 97,
+    "firstName": "Miles",
+    "lastName": "Sanders",
+    "program": "Flashbacks",
+    "archetype": "HB - Elusive Back"
+  },
+  {
+    "externalId": 115121351,
+    "ovr": 97,
+    "firstName": "L&#x27;Jarius",
+    "lastName": "Sneed",
+    "program": "Flashbacks",
+    "archetype": "CB - Zone"
+  },
+  {
+    "externalId": 115113091,
+    "ovr": 97,
+    "firstName": "Vita",
+    "lastName": "Vea",
+    "program": "Flashbacks",
+    "archetype": "DT - Nose Tackle"
+  },
+  {
+    "externalId": 115121552,
+    "ovr": 97,
+    "firstName": "Alijah",
+    "lastName": "Vera-Tucker",
+    "program": "Flashbacks",
+    "archetype": "RG - Agile"
+  },
+  {
+    "externalId": 112910266,
+    "ovr": 97,
+    "firstName": "Peyton",
+    "lastName": "Hillis",
+    "program": "Collector's Series",
+    "archetype": "HB - Power Back"
+  },
+  {
+    "externalId": 112920881,
+    "ovr": 97,
+    "firstName": "Alex",
+    "lastName": "Singleton",
+    "program": "Collector's Series",
+    "archetype": "MIKE - Field General"
+  },
+  {
+    "externalId": 114127730,
+    "ovr": 97,
+    "firstName": "John",
+    "lastName": "Mackey",
+    "program": "Ultimate Legends",
+    "archetype": "HB - Receiving Back"
+  },
+  {
+    "externalId": 114127995,
+    "ovr": 97,
+    "firstName": "LaMarr",
+    "lastName": "Woodley",
+    "program": "Ultimate Legends",
+    "archetype": "WR - Physical"
+  },
+  {
+    "externalId": 95000005,
+    "ovr": 97,
+    "firstName": "John",
+    "lastName": "Abraham",
+    "program": "Theme Team Surge",
+    "archetype": "REDG - Power Rusher"
+  },
+  {
+    "externalId": 95100004,
+    "ovr": 97,
+    "firstName": "Drake",
+    "lastName": "London",
+    "program": "Theme Team Surge",
+    "archetype": "CB - Zone"
+  },
+  {
+    "externalId": 95100003,
+    "ovr": 97,
+    "firstName": "Tariq",
+    "lastName": "Woolen",
+    "program": "Theme Team Surge",
+    "archetype": "WR - Deep Threat"
+  },
+  {
+    "externalId": 115121151,
+    "ovr": 97,
+    "firstName": "Jeremy",
+    "lastName": "Chinn",
+    "program": "Flashbacks",
+    "archetype": "FS - Run Support"
+  },
+  {
+    "externalId": 115110866,
+    "ovr": 97,
+    "firstName": "Jimmy",
+    "lastName": "Garoppolo",
+    "program": "Flashbacks",
+    "archetype": "QB - Field General"
+  },
+  {
+    "externalId": 115123000,
+    "ovr": 97,
+    "firstName": "Daiyan",
+    "lastName": "Henley",
+    "program": "Flashbacks",
+    "archetype": "WILL - Pass Coverage"
+  },
+  {
+    "externalId": 115117777,
+    "ovr": 97,
+    "firstName": "Joe",
+    "lastName": "Thuney",
+    "program": "Flashbacks",
+    "archetype": "LG - Pass Protector"
+  },
+  {
+    "externalId": 86132800,
+    "ovr": 97,
+    "firstName": "Cris",
+    "lastName": "Collinsworth",
+    "program": "Reel Deals",
+    "archetype": "WR - Deep Threat"
+  },
+  {
+    "externalId": 86112225,
+    "ovr": 97,
+    "firstName": "Dan",
+    "lastName": "Dierdorf",
+    "program": "Reel Deals",
+    "archetype": "RT - Pass Protector"
+  },
+  {
+    "externalId": 86109784,
+    "ovr": 97,
+    "firstName": "Rob",
+    "lastName": "Gronkowski",
+    "program": "Reel Deals",
+    "archetype": "TE - Possession"
+  },
+  {
+    "externalId": 86126749,
+    "ovr": 97,
+    "firstName": "Adam",
+    "lastName": "Jones",
+    "program": "Reel Deals",
+    "archetype": "CB - Zone"
+  },
+  {
+    "externalId": 86111377,
+    "ovr": 97,
+    "firstName": "Ray",
+    "lastName": "Lewis",
+    "program": "Reel Deals",
+    "archetype": "MIKE - Field General"
+  },
+  {
+    "externalId": 86110693,
+    "ovr": 97,
+    "firstName": "J.J.",
+    "lastName": "Watt",
+    "program": "Reel Deals",
+    "archetype": "REDG - Power Rusher"
+  },
+  {
+    "externalId": 11322227,
+    "ovr": 97,
+    "firstName": "Kerby",
+    "lastName": "Joseph",
+    "program": "Ranked",
+    "archetype": "FS - Zone"
+  },
+  {
+    "externalId": 11322689,
+    "ovr": 97,
+    "firstName": "Anthony",
+    "lastName": "Richardson",
+    "program": "Ranked",
+    "archetype": "QB - Scrambler"
+  },
+  {
+    "externalId": 11301895,
+    "ovr": 97,
+    "firstName": "Brian",
+    "lastName": "Urlacher",
+    "program": "Ranked",
+    "archetype": "MIKE - Field General"
+  },
+  {
+    "externalId": 85015018,
+    "ovr": 97,
+    "firstName": "Caleb",
+    "lastName": "Banks",
+    "program": "NFL Draft Night",
+    "archetype": "DT - Power Rusher"
+  },
+  {
+    "externalId": 85015024,
+    "ovr": 97,
+    "firstName": "KC",
+    "lastName": "Concepcion",
+    "program": "NFL Draft Night",
+    "archetype": "WR - Slot"
+  },
+  {
+    "externalId": 85015030,
+    "ovr": 97,
+    "firstName": "Omar",
+    "lastName": "Cooper Jr.",
+    "program": "NFL Draft Night",
+    "archetype": "WR - Slot"
+  },
+  {
+    "externalId": 85015031,
+    "ovr": 97,
+    "firstName": "Keldric",
+    "lastName": "Faulk",
+    "program": "NFL Draft Night",
+    "archetype": "LEDG - Speed Rusher"
+  },
+  {
+    "externalId": 85015019,
+    "ovr": 97,
+    "firstName": "Monroe",
+    "lastName": "Freeling",
+    "program": "NFL Draft Night",
+    "archetype": "LT - Pass Protector"
+  },
+  {
+    "externalId": 85015021,
+    "ovr": 97,
+    "firstName": "Max",
+    "lastName": "Iheanachor",
+    "program": "NFL Draft Night",
+    "archetype": "RT - Power"
+  },
+  {
+    "externalId": 85015027,
+    "ovr": 97,
+    "firstName": "Chris",
+    "lastName": "Johnson",
+    "program": "NFL Draft Night",
+    "archetype": "CB - Zone"
+  },
+  {
+    "externalId": 85015023,
+    "ovr": 97,
+    "firstName": "Malachi",
+    "lastName": "Lawrence",
+    "program": "NFL Draft Night",
+    "archetype": "LEDG - Speed Rusher"
+  },
+  {
+    "externalId": 85015020,
+    "ovr": 97,
+    "firstName": "Makai",
+    "lastName": "Lemon",
+    "program": "NFL Draft Night",
+    "archetype": "WR - Slot"
+  },
+  {
+    "externalId": 85015028,
+    "ovr": 97,
+    "firstName": "Caleb",
+    "lastName": "Lomu",
+    "program": "NFL Draft Night",
+    "archetype": "LT - Pass Protector"
+  },
+  {
+    "externalId": 85015022,
+    "ovr": 97,
+    "firstName": "Akheem",
+    "lastName": "Mesidor",
+    "program": "NFL Draft Night",
+    "archetype": "REDG - Run Stopper"
+  },
+  {
+    "externalId": 85015017,
+    "ovr": 97,
+    "firstName": "Blake",
+    "lastName": "Miller",
+    "program": "NFL Draft Night",
+    "archetype": "RT - Agile"
+  },
+  {
+    "externalId": 85015032,
+    "ovr": 97,
+    "firstName": "Jadarian",
+    "lastName": "Price",
+    "program": "NFL Draft Night",
+    "archetype": "HB - Elusive Back"
+  },
+  {
+    "externalId": 85015026,
+    "ovr": 97,
+    "firstName": "Keylan",
+    "lastName": "Rutledge",
+    "program": "NFL Draft Night",
+    "archetype": "RG - Power"
+  },
+  {
+    "externalId": 85015025,
+    "ovr": 97,
+    "firstName": "Dillon",
+    "lastName": "Thieneman",
+    "program": "NFL Draft Night",
+    "archetype": "SS - Run Support"
+  },
+  {
+    "externalId": 85015029,
+    "ovr": 97,
+    "firstName": "Peter",
+    "lastName": "Woods",
+    "program": "NFL Draft Night",
+    "archetype": "DT - Nose Tackle"
+  },
+  {
+    "externalId": 12301426,
+    "ovr": 97,
+    "firstName": "Darius",
+    "lastName": "Slay Jr",
+    "program": "Tribute",
+    "archetype": "CB - Zone"
+  },
+  {
+    "externalId": 11328436,
+    "ovr": 97,
+    "firstName": "Matt",
+    "lastName": "Forte",
+    "program": "Ranked",
+    "archetype": "HB - Receiving Back"
+  },
+  {
+    "externalId": 11314932,
+    "ovr": 97,
+    "firstName": "Quinyon",
+    "lastName": "Mitchell",
+    "program": "Ranked",
+    "archetype": "CB - Man to Man"
+  },
+  {
+    "externalId": 11320436,
+    "ovr": 97,
+    "firstName": "Donald",
+    "lastName": "Parham",
+    "program": "Ranked",
+    "archetype": "TE - Vertical Threat"
+  },
+  {
+    "externalId": 119028442,
+    "ovr": 97,
+    "firstName": "Martellus",
+    "lastName": "Bennett",
+    "program": "Redux",
+    "archetype": "TE - Possession"
+  },
+  {
+    "externalId": 119001449,
+    "ovr": 97,
+    "firstName": "Dré",
+    "lastName": "Bly",
+    "program": "Redux",
+    "archetype": "CB - Man to Man"
+  },
+  {
+    "externalId": 119021586,
+    "ovr": 97,
+    "firstName": "Ja&#x27;Marr",
+    "lastName": "Chase",
+    "program": "Redux",
+    "archetype": "WR - Deep Threat"
+  },
+  {
+    "externalId": 119210845,
+    "ovr": 97,
+    "firstName": "Jadeveon",
+    "lastName": "Clowney",
+    "program": "Redux",
+    "archetype": "LEDG - Run Stopper"
+  },
+  {
+    "externalId": 119001758,
+    "ovr": 97,
+    "firstName": "Daunte",
+    "lastName": "Culpepper",
+    "program": "Redux",
+    "archetype": "QB - Field General"
+  },
+  {
+    "externalId": 119100366,
+    "ovr": 97,
+    "firstName": "Terrell",
+    "lastName": "Davis",
+    "program": "Redux",
+    "archetype": "HB - Elusive Back"
+  },
+  {
+    "externalId": 119003027,
+    "ovr": 97,
+    "firstName": "Boomer",
+    "lastName": "Esiason",
+    "program": "Redux",
+    "archetype": "QB - Strong Arm"
+  },
+  {
+    "externalId": 119212520,
+    "ovr": 97,
+    "firstName": "Myles",
+    "lastName": "Garrett",
+    "program": "Redux",
+    "archetype": "REDG - Power Rusher"
+  },
+  {
+    "externalId": 119111395,
+    "ovr": 97,
+    "firstName": "Tony",
+    "lastName": "Gonzalez",
+    "program": "Redux",
+    "archetype": "TE - Vertical Threat"
+  },
+  {
+    "externalId": 119109784,
+    "ovr": 97,
+    "firstName": "Rob",
+    "lastName": "Gronkowski",
+    "program": "Redux",
+    "archetype": "TE - Possession"
+  },
+  {
+    "externalId": 119012536,
+    "ovr": 97,
+    "firstName": "O.J.",
+    "lastName": "Howard",
+    "program": "Redux",
+    "archetype": "TE - Vertical Threat"
+  },
+  {
+    "externalId": 119013092,
+    "ovr": 97,
+    "firstName": "Lamar",
+    "lastName": "Jackson",
+    "program": "Redux",
+    "archetype": "QB - Scrambler"
+  },
+  {
+    "externalId": 119012345,
+    "ovr": 97,
+    "firstName": "J. Manziel",
+    "lastName": "",
+    "program": "Redux",
+    "archetype": "QB - Improviser"
+  },
+  {
+    "externalId": 119011309,
+    "ovr": 97,
+    "firstName": "Luke",
+    "lastName": "Kuechly",
+    "program": "Redux",
+    "archetype": "MIKE - Field General"
+  },
+  {
+    "externalId": 119111377,
+    "ovr": 97,
+    "firstName": "Ray",
+    "lastName": "Lewis",
+    "program": "Redux",
+    "archetype": "MIKE - Field General"
+  },
+  {
+    "externalId": 119012556,
+    "ovr": 97,
+    "firstName": "Christian",
+    "lastName": "McCaffrey",
+    "program": "Redux",
+    "archetype": "HB - Receiving Back"
+  },
+  {
+    "externalId": 119109859,
+    "ovr": 97,
+    "firstName": "Gerald",
+    "lastName": "McCoy",
+    "program": "Redux",
+    "archetype": "DT - Nose Tackle"
+  },
+  {
+    "externalId": 119020353,
+    "ovr": 97,
+    "firstName": "D.K.",
+    "lastName": "Metcalf",
+    "program": "Redux",
+    "archetype": "WR - Physical"
+  },
+  {
+    "externalId": 119011385,
+    "ovr": 97,
+    "firstName": "J. Allen",
+    "lastName": "Mullet Maniac",
+    "program": "Redux",
+    "archetype": "LEDG - Power Rusher"
+  },
+  {
+    "externalId": 119020548,
+    "ovr": 97,
+    "firstName": "Ed",
+    "lastName": "Oliver",
+    "program": "Redux",
+    "archetype": "DT - Power Rusher"
+  },
+  {
+    "externalId": 119013468,
+    "ovr": 97,
+    "firstName": "Foyesade",
+    "lastName": "Oluokun",
+    "program": "Redux",
+    "archetype": "WILL - Pass Coverage"
+  },
+  {
+    "externalId": 119026749,
+    "ovr": 97,
+    "firstName": "A. Jones",
+    "lastName": "Pacman",
+    "program": "Redux",
+    "archetype": "CB - Zone"
+  },
+  {
+    "externalId": 119032513,
+    "ovr": 97,
+    "firstName": "Julius",
+    "lastName": "Peppers",
+    "program": "Redux",
+    "archetype": "WILL - Run Stopper"
+  },
+  {
+    "externalId": 119014843,
+    "ovr": 97,
+    "firstName": "Clinton",
+    "lastName": "Portis",
+    "program": "Redux",
+    "archetype": "HB - Elusive Back"
+  },
+  {
+    "externalId": 119002925,
+    "ovr": 97,
+    "firstName": "Sterling",
+    "lastName": "Sharpe",
+    "program": "Redux",
+    "archetype": "WR - Deep Threat"
+  },
+  {
+    "externalId": 119111063,
+    "ovr": 97,
+    "firstName": "Ryan",
+    "lastName": "Shazier",
+    "program": "Redux",
+    "archetype": "MIKE - Pass Coverage"
+  },
+  {
+    "externalId": 119000807,
+    "ovr": 97,
+    "firstName": "D. Robinson",
+    "lastName": "Shoelace",
+    "program": "Redux",
+    "archetype": "WR - Playmaker"
+  },
+  {
+    "externalId": 119114807,
+    "ovr": 97,
+    "firstName": "Cam",
+    "lastName": "Skattebo",
+    "program": "Redux",
+    "archetype": "HB - Power Back"
+  },
+  {
+    "externalId": 119011440,
+    "ovr": 97,
+    "firstName": "Harrison",
+    "lastName": "Smith",
+    "program": "Redux",
+    "archetype": "FS - Zone"
+  },
+  {
+    "externalId": 119022694,
+    "ovr": 97,
+    "firstName": "Jaxon",
+    "lastName": "Smith-Njigba",
+    "program": "Redux",
+    "archetype": "WR - Slot"
+  },
+  {
+    "externalId": 119120051,
+    "ovr": 97,
+    "firstName": "Matthew",
+    "lastName": "Stafford",
+    "program": "Redux",
+    "archetype": "QB - Field General"
+  },
+  {
+    "externalId": 119032536,
+    "ovr": 97,
+    "firstName": "Sonny",
+    "lastName": "Styles",
+    "program": "Redux",
+    "archetype": "SAM - Pass Coverage"
+  },
+  {
+    "externalId": 119100800,
+    "ovr": 97,
+    "firstName": "Patrick",
+    "lastName": "Surtain",
+    "program": "Redux",
+    "archetype": "CB - Man to Man"
+  },
+  {
+    "externalId": 119121764,
+    "ovr": 97,
+    "firstName": "Patrick",
+    "lastName": "Surtain II",
+    "program": "Redux",
+    "archetype": "CB - Man to Man"
+  },
+  {
+    "externalId": 119028387,
+    "ovr": 97,
+    "firstName": "Aqib",
+    "lastName": "Talib",
+    "program": "Redux",
+    "archetype": "CB - Man to Man"
+  },
+  {
+    "externalId": 119110891,
+    "ovr": 97,
+    "firstName": "Lawrence",
+    "lastName": "Taylor",
+    "program": "Redux",
+    "archetype": "REDG - Power Rusher"
+  },
+  {
+    "externalId": 119011567,
+    "ovr": 97,
+    "firstName": "Bobby",
+    "lastName": "Wagner",
+    "program": "Redux",
+    "archetype": "MIKE - Run Stopper"
+  },
+  {
+    "externalId": 119012562,
+    "ovr": 97,
+    "firstName": "T.J.",
+    "lastName": "Watt",
+    "program": "Redux",
+    "archetype": "LEDG - Speed Rusher"
+  },
+  {
+    "externalId": 119011401,
+    "ovr": 97,
+    "firstName": "Reggie",
+    "lastName": "Wayne",
+    "program": "Redux",
+    "archetype": "WR - Playmaker"
+  },
+  {
+    "externalId": 119014924,
+    "ovr": 97,
+    "firstName": "Nate",
+    "lastName": "Wiggins",
+    "program": "Redux",
+    "archetype": "CB - Man to Man"
+  },
+  {
+    "externalId": 119114650,
+    "ovr": 97,
+    "firstName": "Xavier",
+    "lastName": "Worthy",
+    "program": "Redux",
+    "archetype": "WR - Playmaker"
+  },
+  {
+    "externalId": 112914500,
+    "ovr": 97,
+    "firstName": "C. Williams",
+    "lastName": "Ice Man",
+    "program": "Collector's Series",
+    "archetype": "QB - Scrambler"
+  },
+  {
+    "externalId": 112912345,
+    "ovr": 97,
+    "firstName": "J. Manziel",
+    "lastName": "",
+    "program": "Collector's Series",
+    "archetype": "QB - Improviser"
+  },
+  {
+    "externalId": 112917557,
+    "ovr": 97,
+    "firstName": "D. Henry",
+    "lastName": "King Henry",
+    "program": "Collector's Series",
+    "archetype": "HB - Power Back"
+  },
+  {
+    "externalId": 112911385,
+    "ovr": 97,
+    "firstName": "J. Allen",
+    "lastName": "Mullet Maniac",
+    "program": "Collector's Series",
+    "archetype": "LEDG - Power Rusher"
+  },
+  {
+    "externalId": 112926749,
+    "ovr": 97,
+    "firstName": "A. Jones",
+    "lastName": "Pacman",
+    "program": "Collector's Series",
+    "archetype": "CB - Zone"
+  },
+  {
+    "externalId": 112900807,
+    "ovr": 97,
+    "firstName": "D. Robinson",
+    "lastName": "Shoelace",
+    "program": "Collector's Series",
+    "archetype": "WR - Playmaker"
+  },
+  {
+    "externalId": 112802963,
+    "ovr": 97,
+    "firstName": "B. Bosworth",
+    "lastName": "The Boz",
+    "program": "Collector's Series",
+    "archetype": "MIKE - Run Stopper"
+  },
+  {
+    "externalId": 112812622,
+    "ovr": 97,
+    "firstName": "D. Dawkins",
+    "lastName": "The Shnowman",
+    "program": "Collector's Series",
+    "archetype": "LT - Pass Protector"
+  },
+  {
+    "externalId": 114022571,
+    "ovr": 97,
+    "firstName": "Sam",
+    "lastName": "Adams",
+    "program": "Ultimate Legends",
+    "archetype": "DT - Nose Tackle"
+  },
+  {
+    "externalId": 114001655,
+    "ovr": 97,
+    "firstName": "Jerome",
+    "lastName": "Bettis",
+    "program": "Ultimate Legends",
+    "archetype": "HB - Power Back"
+  },
+  {
+    "externalId": 67422702,
+    "ovr": 97,
+    "firstName": "Will",
+    "lastName": "Anderson Jr",
+    "program": "TOTY Collection",
+    "archetype": "LEDG - Speed Rusher"
+  },
+  {
+    "externalId": 67021142,
+    "ovr": 97,
+    "firstName": "Zack",
+    "lastName": "Baun",
+    "program": "TOTY",
+    "archetype": "WILL - Pass Coverage"
+  },
+  {
+    "externalId": 67421142,
+    "ovr": 97,
+    "firstName": "Zack",
+    "lastName": "Baun",
+    "program": "TOTY Collection",
+    "archetype": "WILL - Pass Coverage"
+  },
+  {
+    "externalId": 67417752,
+    "ovr": 97,
+    "firstName": "Kevin",
+    "lastName": "Byard III",
+    "program": "TOTY Collection",
+    "archetype": "FS - Zone"
+  },
+  {
+    "externalId": 67413391,
+    "ovr": 97,
+    "firstName": "Michael",
+    "lastName": "Dickson",
+    "program": "TOTY Collection",
+    "archetype": "P - Power"
+  },
+  {
+    "externalId": 67013391,
+    "ovr": 97,
+    "firstName": "Michael",
+    "lastName": "Dickson",
+    "program": "TOTY",
+    "archetype": "P - Power"
+  },
+  {
+    "externalId": 67012520,
+    "ovr": 97,
+    "firstName": "Myles",
+    "lastName": "Garrett",
+    "program": "TOTY",
+    "archetype": "REDG - Power Rusher"
+  },
+  {
+    "externalId": 67412520,
+    "ovr": 97,
+    "firstName": "Myles",
+    "lastName": "Garrett",
+    "program": "TOTY Collection",
+    "archetype": "REDG - Power Rusher"
+  },
+  {
+    "externalId": 67022326,
+    "ovr": 97,
+    "firstName": "Breece",
+    "lastName": "Hall",
+    "program": "TOTY",
+    "archetype": "HB - Elusive Back"
+  },
+  {
+    "externalId": 67422226,
+    "ovr": 97,
+    "firstName": "Kyle",
+    "lastName": "Hamilton",
+    "program": "TOTY Collection",
+    "archetype": "SS - Run Support"
+  },
+  {
+    "externalId": 67421551,
+    "ovr": 97,
+    "firstName": "Creed",
+    "lastName": "Humphrey",
+    "program": "TOTY Collection",
+    "archetype": "C - Power"
+  },
+  {
+    "externalId": 67021551,
+    "ovr": 97,
+    "firstName": "Creed",
+    "lastName": "Humphrey",
+    "program": "TOTY",
+    "archetype": "C - Power"
+  },
+  {
+    "externalId": 67415101,
+    "ovr": 97,
+    "firstName": "Travis",
+    "lastName": "Hunter",
+    "program": "TOTY Collection",
+    "archetype": "CB - Man to Man"
+  },
+  {
+    "externalId": 67420552,
+    "ovr": 97,
+    "firstName": "Dexter",
+    "lastName": "Lawrence II",
+    "program": "TOTY Collection",
+    "archetype": "DT - Power Rusher"
+  },
+  {
+    "externalId": 67421101,
+    "ovr": 97,
+    "firstName": "Damien",
+    "lastName": "Lewis",
+    "program": "TOTY Collection",
+    "archetype": "LG - Power"
+  },
+  {
+    "externalId": 67015006,
+    "ovr": 97,
+    "firstName": "Cam",
+    "lastName": "Little",
+    "program": "TOTY",
+    "archetype": "K - Power"
+  },
+  {
+    "externalId": 67415006,
+    "ovr": 97,
+    "firstName": "Cam",
+    "lastName": "Little",
+    "program": "TOTY Collection",
+    "archetype": "K - Power"
+  },
+  {
+    "externalId": 67414500,
+    "ovr": 97,
+    "firstName": "Drake",
+    "lastName": "Maye",
+    "program": "TOTY Collection",
+    "archetype": "QB - Field General"
+  },
+  {
+    "externalId": 67422093,
+    "ovr": 97,
+    "firstName": "Trey",
+    "lastName": "McBride",
+    "program": "TOTY Collection",
+    "archetype": "TE - Vertical Threat"
+  },
+  {
+    "externalId": 67421842,
+    "ovr": 97,
+    "firstName": "Quinn",
+    "lastName": "Meinerz",
+    "program": "TOTY Collection",
+    "archetype": "RG - Power"
+  },
+  {
+    "externalId": 67422811,
+    "ovr": 97,
+    "firstName": "Puka",
+    "lastName": "Nacua",
+    "program": "TOTY Collection",
+    "archetype": "WR - Slot"
+  },
+  {
+    "externalId": 67422706,
+    "ovr": 97,
+    "firstName": "Joey",
+    "lastName": "Porter",
+    "program": "TOTY Collection",
+    "archetype": "CB - Man to Man"
+  },
+  {
+    "externalId": 67417538,
+    "ovr": 97,
+    "firstName": "Jalen",
+    "lastName": "Ramsey",
+    "program": "TOTY Collection",
+    "archetype": "CB - Man to Man"
+  },
+  {
+    "externalId": 67012959,
+    "ovr": 97,
+    "firstName": "Patrick",
+    "lastName": "Ricard",
+    "program": "TOTY",
+    "archetype": "FB - Blocking"
+  },
+  {
+    "externalId": 67412959,
+    "ovr": 97,
+    "firstName": "Patrick",
+    "lastName": "Ricard",
+    "program": "TOTY Collection",
+    "archetype": "FB - Blocking"
+  },
+  {
+    "externalId": 67422690,
+    "ovr": 97,
+    "firstName": "Bijan",
+    "lastName": "Robinson",
+    "program": "TOTY Collection",
+    "archetype": "HB - Elusive Back"
+  },
+  {
+    "externalId": 67421540,
+    "ovr": 97,
+    "firstName": "Penei",
+    "lastName": "Sewell",
+    "program": "TOTY Collection",
+    "archetype": "RT - Power"
+  },
+  {
+    "externalId": 67021540,
+    "ovr": 97,
+    "firstName": "Penei",
+    "lastName": "Sewell",
+    "program": "TOTY",
+    "archetype": "RT - Power"
+  },
+  {
+    "externalId": 67422666,
+    "ovr": 97,
+    "firstName": "Rashid",
+    "lastName": "Shaheed",
+    "program": "TOTY Collection",
+    "archetype": "WR - Playmaker"
+  },
+  {
+    "externalId": 67413082,
+    "ovr": 97,
+    "firstName": "Roquan",
+    "lastName": "Smith",
+    "program": "TOTY Collection",
+    "archetype": "MIKE - Field General"
+  },
+  {
+    "externalId": 67022694,
+    "ovr": 97,
+    "firstName": "Jaxon",
+    "lastName": "Smith-Njigba",
+    "program": "TOTY",
+    "archetype": "WR - Slot"
+  },
+  {
+    "externalId": 67422694,
+    "ovr": 97,
+    "firstName": "Jaxon",
+    "lastName": "Smith-Njigba",
+    "program": "TOTY Collection",
+    "archetype": "WR - Slot"
+  },
+  {
+    "externalId": 67413875,
+    "ovr": 97,
+    "firstName": "Robert",
+    "lastName": "Spillane",
+    "program": "TOTY Collection",
+    "archetype": "WILL - Pass Coverage"
+  },
+  {
+    "externalId": 67421606,
+    "ovr": 97,
+    "firstName": "Amon-Ra",
+    "lastName": "St. Brown",
+    "program": "TOTY Collection",
+    "archetype": "WR - Slot"
+  },
+  {
+    "externalId": 67021606,
+    "ovr": 97,
+    "firstName": "Amon-Ra",
+    "lastName": "St. Brown",
+    "program": "TOTY",
+    "archetype": "WR - Slot"
+  },
+  {
+    "externalId": 67022998,
+    "ovr": 97,
+    "firstName": "Henry",
+    "lastName": "To&#x27;oTo&#x27;o",
+    "program": "TOTY",
+    "archetype": "SAM - Pass Coverage"
+  },
+  {
+    "externalId": 67422998,
+    "ovr": 97,
+    "firstName": "Henry",
+    "lastName": "To&#x27;oTo&#x27;o",
+    "program": "TOTY Collection",
+    "archetype": "SAM - Pass Coverage"
+  },
+  {
+    "externalId": 67020547,
+    "ovr": 97,
+    "firstName": "Quinnen",
+    "lastName": "Williams",
+    "program": "TOTY",
+    "archetype": "DT - Nose Tackle"
+  },
+  {
+    "externalId": 67420547,
+    "ovr": 97,
+    "firstName": "Quinnen",
+    "lastName": "Williams",
+    "program": "TOTY Collection",
+    "archetype": "DT - Nose Tackle"
+  },
+  {
+    "externalId": 67409800,
+    "ovr": 97,
+    "firstName": "Trent",
+    "lastName": "Williams",
+    "program": "TOTY Collection",
+    "archetype": "LT - Power"
+  },
+  {
+    "externalId": 67009800,
+    "ovr": 97,
+    "firstName": "Trent",
+    "lastName": "Williams",
+    "program": "TOTY",
+    "archetype": "LT - Power"
+  },
+  {
+    "externalId": 67023023,
+    "ovr": 97,
+    "firstName": "Devon",
+    "lastName": "Witherspoon",
+    "program": "TOTY",
+    "archetype": "CB - Slot"
+  },
+  {
+    "externalId": 67423023,
+    "ovr": 97,
+    "firstName": "Devon",
+    "lastName": "Witherspoon",
+    "program": "TOTY Collection",
+    "archetype": "CB - Slot"
+  },
+  {
+    "externalId": 67010889,
+    "ovr": 97,
+    "firstName": "Rod",
+    "lastName": "Woodson",
+    "program": "TOTY",
+    "archetype": "FS - Hybrid"
+  },
+  {
+    "externalId": 115012549,
+    "ovr": 97,
+    "firstName": "Budda",
+    "lastName": "Baker",
+    "program": "Flashbacks",
+    "archetype": "SS - Run Support"
+  },
+  {
+    "externalId": 115021584,
+    "ovr": 97,
+    "firstName": "Rashod",
+    "lastName": "Bateman",
+    "program": "Flashbacks",
+    "archetype": "WR - Deep Threat"
+  },
+  {
+    "externalId": 68022458,
+    "ovr": 97,
+    "firstName": "Leo",
+    "lastName": "Chenal",
+    "program": "Free Agency",
+    "archetype": "SAM - Run Stopper"
+  },
+  {
+    "externalId": 68017752,
+    "ovr": 97,
+    "firstName": "Kamren",
+    "lastName": "Curl",
+    "program": "Free Agency",
+    "archetype": "SS - Run Support"
+  },
+  {
+    "externalId": 68013128,
+    "ovr": 97,
+    "firstName": "Dallas",
+    "lastName": "Goedert",
+    "program": "Free Agency",
+    "archetype": "TE - Vertical Threat"
+  },
+  {
+    "externalId": 115021131,
+    "ovr": 97,
+    "firstName": "Jonathan",
+    "lastName": "Greenard",
+    "program": "Flashbacks",
+    "archetype": "LEDG - Speed Rusher"
+  },
+  {
+    "externalId": 68012692,
+    "ovr": 97,
+    "firstName": "Trey",
+    "lastName": "Hendrickson",
+    "program": "Free Agency",
+    "archetype": "REDG - Speed Rusher"
+  },
+  {
+    "externalId": 115027231,
+    "ovr": 97,
+    "firstName": "Maurice",
+    "lastName": "Jones-Drew",
+    "program": "Flashbacks",
+    "archetype": "HB - Elusive Back"
+  },
+  {
+    "externalId": 68022183,
+    "ovr": 97,
+    "firstName": "Devin",
+    "lastName": "Lloyd",
+    "program": "Free Agency",
+    "archetype": "MIKE - Run Stopper"
+  },
+  {
+    "externalId": 68020348,
+    "ovr": 97,
+    "firstName": "Deebo",
+    "lastName": "Samuel Sr",
+    "program": "Free Agency",
+    "archetype": "WR - Playmaker"
+  },
+  {
+    "externalId": 68013208,
+    "ovr": 97,
+    "firstName": "Wyatt",
+    "lastName": "Teller",
+    "program": "Free Agency",
+    "archetype": "RG - Power"
+  },
+  {
+    "externalId": 68022448,
+    "ovr": 97,
+    "firstName": "Rasheed",
+    "lastName": "Walker",
+    "program": "Free Agency",
+    "archetype": "LT - Pass Protector"
+  },
+  {
+    "externalId": 68022338,
+    "ovr": 97,
+    "firstName": "Javonte",
+    "lastName": "Williams",
+    "program": "Free Agency",
+    "archetype": "HB - Power Back"
+  },
+  {
+    "externalId": 12022260,
+    "ovr": 97,
+    "firstName": "Sauce",
+    "lastName": "Gardner",
+    "program": "Crystal",
+    "archetype": "CB - Man to Man"
+  },
+  {
+    "externalId": 12004601,
+    "ovr": 97,
+    "firstName": "Grey",
+    "lastName": "Zabel",
+    "program": "Crystal",
+    "archetype": "LG - Agile"
+  },
+  {
+    "externalId": 112814156,
+    "ovr": 97,
+    "firstName": "C. Johnson",
+    "lastName": "Ocho Cinco",
+    "program": "Collector's Series",
+    "archetype": "WR - Deep Threat"
+  },
+  {
+    "externalId": 112802924,
+    "ovr": 97,
+    "firstName": "T. Hendricks",
+    "lastName": "The Mad Stork",
+    "program": "Collector's Series",
+    "archetype": "SAM - Pass Coverage"
+  },
+  {
+    "externalId": 114031878,
+    "ovr": 97,
+    "firstName": "Herb",
+    "lastName": "Adderley",
+    "program": "Ultimate Legends",
+    "archetype": "CB - Slot"
+  },
+  {
+    "externalId": 13515211,
+    "ovr": 97,
+    "firstName": "Jamaree",
+    "lastName": "Caldwell",
+    "program": "Team Builders",
+    "archetype": "DT - Nose Tackle"
+  },
+  {
+    "externalId": 13514646,
+    "ovr": 97,
+    "firstName": "Keon",
+    "lastName": "Coleman",
+    "program": "Team Builders",
+    "archetype": "WR - Physical"
+  },
+  {
+    "externalId": 13512922,
+    "ovr": 97,
+    "firstName": "Taysom",
+    "lastName": "Hill",
+    "program": "Team Builders",
+    "archetype": "TE - Vertical Threat"
+  },
+  {
+    "externalId": 13522375,
+    "ovr": 97,
+    "firstName": "Aidan",
+    "lastName": "Hutchinson",
+    "program": "Team Builders",
+    "archetype": "LEDG - Speed Rusher"
+  },
+  {
+    "externalId": 13521454,
+    "ovr": 97,
+    "firstName": "Deommodore",
+    "lastName": "Lenoir",
+    "program": "Team Builders",
+    "archetype": "CB - Zone"
+  },
+  {
+    "externalId": 13515129,
+    "ovr": 97,
+    "firstName": "Wyatt",
+    "lastName": "Milum",
+    "program": "Team Builders",
+    "archetype": "RG - Power"
+  },
+  {
+    "externalId": 114001762,
+    "ovr": 97,
+    "firstName": "Randy",
+    "lastName": "Moss",
+    "program": "Ultimate Legends",
+    "archetype": "WR - Deep Threat"
+  },
+  {
+    "externalId": 13714931,
+    "ovr": 97,
+    "firstName": "Tyler",
+    "lastName": "Nubin",
+    "program": "Team Builders",
+    "archetype": "SS - Run Support"
+  },
+  {
+    "externalId": 13521234,
+    "ovr": 97,
+    "firstName": "Trenton",
+    "lastName": "Simpson",
+    "program": "Team Builders",
+    "archetype": "SAM - Run Stopper"
+  },
+  {
+    "externalId": 67022702,
+    "ovr": 97,
+    "firstName": "Will",
+    "lastName": "Anderson Jr",
+    "program": "TOTY",
+    "archetype": "LEDG - Speed Rusher"
+  },
+  {
+    "externalId": 67017752,
+    "ovr": 97,
+    "firstName": "Kevin",
+    "lastName": "Byard III",
+    "program": "TOTY",
+    "archetype": "FS - Zone"
+  },
+  {
+    "externalId": 67022226,
+    "ovr": 97,
+    "firstName": "Kyle",
+    "lastName": "Hamilton",
+    "program": "TOTY",
+    "archetype": "SS - Run Support"
+  },
+  {
+    "externalId": 67015101,
+    "ovr": 97,
+    "firstName": "Travis",
+    "lastName": "Hunter",
+    "program": "TOTY",
+    "archetype": "CB - Man to Man"
+  },
+  {
+    "externalId": 67020552,
+    "ovr": 97,
+    "firstName": "Dexter",
+    "lastName": "Lawrence II",
+    "program": "TOTY",
+    "archetype": "DT - Power Rusher"
+  },
+  {
+    "externalId": 67021101,
+    "ovr": 97,
+    "firstName": "Damien",
+    "lastName": "Lewis",
+    "program": "TOTY",
+    "archetype": "LG - Power"
+  },
+  {
+    "externalId": 67002899,
+    "ovr": 97,
+    "firstName": "Bruce",
+    "lastName": "Matthews",
+    "program": "TOTY",
+    "archetype": "RG - Agile"
+  },
+  {
+    "externalId": 67014500,
+    "ovr": 97,
+    "firstName": "Drake",
+    "lastName": "Maye",
+    "program": "TOTY",
+    "archetype": "QB - Field General"
+  },
+  {
+    "externalId": 67022093,
+    "ovr": 97,
+    "firstName": "Trey",
+    "lastName": "McBride",
+    "program": "TOTY",
+    "archetype": "TE - Vertical Threat"
+  },
+  {
+    "externalId": 67021842,
+    "ovr": 97,
+    "firstName": "Quinn",
+    "lastName": "Meinerz",
+    "program": "TOTY",
+    "archetype": "RG - Power"
+  },
+  {
+    "externalId": 67022811,
+    "ovr": 97,
+    "firstName": "Puka",
+    "lastName": "Nacua",
+    "program": "TOTY",
+    "archetype": "WR - Slot"
+  },
+  {
+    "externalId": 67022706,
+    "ovr": 97,
+    "firstName": "Joey",
+    "lastName": "Porter",
+    "program": "TOTY",
+    "archetype": "CB - Man to Man"
+  },
+  {
+    "externalId": 67017538,
+    "ovr": 97,
+    "firstName": "Jalen",
+    "lastName": "Ramsey",
+    "program": "TOTY",
+    "archetype": "CB - Man to Man"
+  },
+  {
+    "externalId": 67022690,
+    "ovr": 97,
+    "firstName": "Bijan",
+    "lastName": "Robinson",
+    "program": "TOTY",
+    "archetype": "HB - Elusive Back"
+  },
+  {
+    "externalId": 67022666,
+    "ovr": 97,
+    "firstName": "Rashid",
+    "lastName": "Shaheed",
+    "program": "TOTY",
+    "archetype": "WR - Playmaker"
+  },
+  {
+    "externalId": 67013082,
+    "ovr": 97,
+    "firstName": "Roquan",
+    "lastName": "Smith",
+    "program": "TOTY",
+    "archetype": "MIKE - Field General"
+  },
+  {
+    "externalId": 67013875,
+    "ovr": 97,
+    "firstName": "Robert",
+    "lastName": "Spillane",
+    "program": "TOTY",
+    "archetype": "WILL - Pass Coverage"
+  },
+  {
+    "externalId": 115021365,
+    "ovr": 97,
+    "firstName": "Aaron",
+    "lastName": "Brewer",
+    "program": "Flashbacks",
+    "archetype": "C - Agile"
+  },
+  {
+    "externalId": 115021490,
+    "ovr": 97,
+    "firstName": "Tre&#x27;von",
+    "lastName": "Moehrig",
+    "program": "Flashbacks",
+    "archetype": "FS - Run Support"
+  },
+  {
+    "externalId": 115013184,
+    "ovr": 97,
+    "firstName": "DJ",
+    "lastName": "Moore",
+    "program": "Flashbacks",
+    "archetype": "WR - Playmaker"
+  },
+  {
+    "externalId": 115022460,
+    "ovr": 97,
+    "firstName": "Malcolm",
+    "lastName": "Rodriguez",
+    "program": "Flashbacks",
+    "archetype": "SAM - Run Stopper"
+  },
+  {
+    "externalId": 66011063,
+    "ovr": 97,
+    "firstName": "Ryan",
+    "lastName": "Shazier",
+    "program": "NFL Combine",
+    "archetype": "MIKE - Pass Coverage"
+  },
+  {
+    "externalId": 66009315,
+    "ovr": 97,
+    "firstName": "Sonny",
+    "lastName": "Styles",
+    "program": "NFL Combine",
+    "archetype": "SAM - Pass Coverage"
+  },
+  {
+    "externalId": 66014650,
+    "ovr": 97,
+    "firstName": "Xavier",
+    "lastName": "Worthy",
+    "program": "NFL Combine",
+    "archetype": "WR - Playmaker"
+  },
+  {
+    "externalId": 112826749,
+    "ovr": 97,
+    "firstName": "A. Jones",
+    "lastName": "Pacman",
+    "program": "Collector's Series",
+    "archetype": "CB - Zone"
+  },
+  {
+    "externalId": 11205349,
+    "ovr": 97,
+    "firstName": "Robert",
+    "lastName": "Brazile",
+    "program": "Ranked",
+    "archetype": "WILL - Run Stopper"
+  },
+  {
+    "externalId": 11220982,
+    "ovr": 97,
+    "firstName": "Nnamdi",
+    "lastName": "Madubuike",
+    "program": "Ranked",
+    "archetype": "DT - Nose Tackle"
+  },
+  {
+    "externalId": 11215065,
+    "ovr": 97,
+    "firstName": "Dont&#x27;e",
+    "lastName": "Thornton Jr",
+    "program": "Ranked",
+    "archetype": "WR - Deep Threat"
+  },
+  {
+    "externalId": 114011395,
+    "ovr": 97,
+    "firstName": "Tony",
+    "lastName": "Gonzalez",
+    "program": "Ultimate Legends",
+    "archetype": "TE - Vertical Threat"
+  },
+  {
+    "externalId": 114009859,
+    "ovr": 97,
+    "firstName": "Gerald",
+    "lastName": "McCoy",
+    "program": "Ultimate Legends",
+    "archetype": "DT - Nose Tackle"
+  },
+  {
+    "externalId": 66020353,
+    "ovr": 97,
+    "firstName": "D.K.",
+    "lastName": "Metcalf",
+    "program": "NFL Combine",
+    "archetype": "WR - Physical"
+  },
+  {
+    "externalId": 66011440,
+    "ovr": 97,
+    "firstName": "Harrison",
+    "lastName": "Smith",
+    "program": "NFL Combine",
+    "archetype": "FS - Zone"
+  },
+  {
+    "externalId": 66010845,
+    "ovr": 97,
+    "firstName": "Jadeveon",
+    "lastName": "Clowney",
+    "program": "NFL Combine",
+    "archetype": "LEDG - Run Stopper"
+  },
+  {
+    "externalId": 66001758,
+    "ovr": 97,
+    "firstName": "Daunte",
+    "lastName": "Culpepper",
+    "program": "NFL Combine",
+    "archetype": "QB - Field General"
+  },
+  {
+    "externalId": 66014843,
+    "ovr": 97,
+    "firstName": "Clinton",
+    "lastName": "Portis",
+    "program": "NFL Combine",
+    "archetype": "HB - Elusive Back"
+  },
+  {
+    "externalId": 66014924,
+    "ovr": 97,
+    "firstName": "Nate",
+    "lastName": "Wiggins",
+    "program": "NFL Combine",
+    "archetype": "CB - Man to Man"
+  },
+  {
+    "externalId": 115021586,
+    "ovr": 97,
+    "firstName": "Ja&#x27;Marr",
+    "lastName": "Chase",
+    "program": "Flashbacks",
+    "archetype": "WR - Deep Threat"
+  },
+  {
+    "externalId": 115021764,
+    "ovr": 97,
+    "firstName": "Patrick",
+    "lastName": "Surtain II",
+    "program": "Flashbacks",
+    "archetype": "CB - Man to Man"
+  },
+  {
+    "externalId": 65032513,
+    "ovr": 97,
+    "firstName": "Julius",
+    "lastName": "Peppers",
+    "program": "Genki Force",
+    "archetype": "WILL - Run Stopper"
+  },
+  {
+    "externalId": 112800807,
+    "ovr": 97,
+    "firstName": "D. Robinson",
+    "lastName": "Shoelace",
+    "program": "Collector's Series",
+    "archetype": "WR - Playmaker"
+  },
+  {
+    "externalId": 58000366,
+    "ovr": 97,
+    "firstName": "Terrell",
+    "lastName": "Davis",
+    "program": "NFL Honors",
+    "archetype": "HB - Elusive Back"
+  },
+  {
+    "externalId": 114002925,
+    "ovr": 97,
+    "firstName": "Sterling",
+    "lastName": "Sharpe",
+    "program": "Ultimate Legends",
+    "archetype": "WR - Deep Threat"
+  },
+  {
+    "externalId": 114028387,
+    "ovr": 97,
+    "firstName": "Aqib",
+    "lastName": "Talib",
+    "program": "Ultimate Legends",
+    "archetype": "CB - Man to Man"
+  },
+  {
+    "externalId": 58010891,
+    "ovr": 97,
+    "firstName": "Lawrence",
+    "lastName": "Taylor",
+    "program": "NFL Honors",
+    "archetype": "REDG - Power Rusher"
+  },
+  {
+    "externalId": 65009784,
+    "ovr": 97,
+    "firstName": "Rob",
+    "lastName": "Gronkowski",
+    "program": "Genki Force",
+    "archetype": "TE - Possession"
+  },
+  {
+    "externalId": 65011377,
+    "ovr": 97,
+    "firstName": "Ray",
+    "lastName": "Lewis",
+    "program": "Genki Force",
+    "archetype": "MIKE - Field General"
+  },
+  {
+    "externalId": 115001449,
+    "ovr": 97,
+    "firstName": "Dré",
+    "lastName": "Bly",
+    "program": "Flashbacks",
+    "archetype": "CB - Man to Man"
+  },
+  {
+    "externalId": 115012536,
+    "ovr": 97,
+    "firstName": "O.J.",
+    "lastName": "Howard",
+    "program": "Flashbacks",
+    "archetype": "TE - Vertical Threat"
+  },
+  {
+    "externalId": 58000006,
+    "ovr": 97,
+    "firstName": "Christian",
+    "lastName": "McCaffrey",
+    "program": "NFL Honors",
+    "archetype": "HB - Receiving Back"
+  },
+  {
+    "externalId": 58000007,
+    "ovr": 97,
+    "firstName": "Bobby",
+    "lastName": "Wagner",
+    "program": "NFL Honors",
+    "archetype": "MIKE - Run Stopper"
+  },
+  {
+    "externalId": 112812345,
+    "ovr": 97,
+    "firstName": "J. Manziel",
+    "lastName": "",
+    "program": "Collector's Series",
+    "archetype": "QB - Improviser"
+  },
+  {
+    "externalId": 112811385,
+    "ovr": 97,
+    "firstName": "J. Allen",
+    "lastName": "Mullet Maniac",
+    "program": "Collector's Series",
+    "archetype": "LEDG - Power Rusher"
+  },
+  {
+    "externalId": 65000800,
+    "ovr": 97,
+    "firstName": "Patrick",
+    "lastName": "Surtain",
+    "program": "Genki Force",
+    "archetype": "CB - Man to Man"
+  },
+  {
+    "externalId": 65011401,
+    "ovr": 97,
+    "firstName": "Reggie",
+    "lastName": "Wayne",
+    "program": "Genki Force",
+    "archetype": "WR - Playmaker"
+  },
+  {
+    "externalId": 114003027,
+    "ovr": 97,
+    "firstName": "Boomer",
+    "lastName": "Esiason",
+    "program": "Ultimate Legends",
+    "archetype": "QB - Strong Arm"
+  },
+  {
+    "externalId": 114011309,
+    "ovr": 97,
+    "firstName": "Luke",
+    "lastName": "Kuechly",
+    "program": "Ultimate Legends",
+    "archetype": "MIKE - Field General"
+  },
+  {
+    "externalId": 58000005,
+    "ovr": 97,
+    "firstName": "Myles",
+    "lastName": "Garrett",
+    "program": "NFL Honors",
+    "archetype": "REDG - Power Rusher"
+  },
+  {
+    "externalId": 58000004,
+    "ovr": 97,
+    "firstName": "Jaxon",
+    "lastName": "Smith-Njigba",
+    "program": "NFL Honors",
+    "archetype": "WR - Slot"
+  },
+  {
+    "externalId": 58000003,
+    "ovr": 97,
+    "firstName": "Matthew",
+    "lastName": "Stafford",
+    "program": "NFL Honors",
+    "archetype": "QB - Field General"
+  },
+  {
+    "externalId": 65013092,
+    "ovr": 97,
+    "firstName": "Lamar",
+    "lastName": "Jackson",
+    "program": "Genki Force",
+    "archetype": "QB - Scrambler"
+  },
+  {
+    "externalId": 65014807,
+    "ovr": 97,
+    "firstName": "Cam",
+    "lastName": "Skattebo",
+    "program": "Genki Force",
+    "archetype": "HB - Power Back"
+  },
+  {
+    "externalId": 65012562,
+    "ovr": 97,
+    "firstName": "T.J.",
+    "lastName": "Watt",
+    "program": "Genki Force",
+    "archetype": "LEDG - Speed Rusher"
+  },
+  {
+    "externalId": 115028442,
+    "ovr": 97,
+    "firstName": "Martellus",
+    "lastName": "Bennett",
+    "program": "Flashbacks",
+    "archetype": "TE - Possession"
+  },
+  {
+    "externalId": 115020548,
+    "ovr": 97,
+    "firstName": "Ed",
+    "lastName": "Oliver",
+    "program": "Flashbacks",
+    "archetype": "DT - Power Rusher"
+  },
+  {
+    "externalId": 12013468,
+    "ovr": 97,
+    "firstName": "Foyesade",
+    "lastName": "Oluokun",
+    "program": "Crystal",
+    "archetype": "WILL - Pass Coverage"
+  },
+  {
+    "externalId": 13514793,
+    "ovr": 97,
+    "firstName": "Ashton",
+    "lastName": "Jeanty",
+    "program": "Team Builders",
+    "archetype": "HB - Elusive Back"
+  },
+  {
+    "externalId": 13522269,
+    "ovr": 97,
+    "firstName": "Derek",
+    "lastName": "Stingley Jr",
+    "program": "Team Builders",
+    "archetype": "CB - Zone"
+  },
+  {
+    "externalId": 11020430,
+    "ovr": 97,
+    "firstName": "Kyler",
+    "lastName": "Murray",
+    "program": "Ranked",
+    "archetype": "QB - Scrambler"
+  },
+  {
+    "externalId": 11021000,
+    "ovr": 97,
+    "firstName": "Isaiah",
+    "lastName": "Simmons",
+    "program": "Ranked",
+    "archetype": "SS - Run Support"
+  },
+  {
+    "externalId": 11014130,
+    "ovr": 97,
+    "firstName": "LaDainian",
+    "lastName": "Tomlinson",
+    "program": "Ranked",
+    "archetype": "HB - Elusive Back"
+  },
+  {
+    "externalId": 112920952,
+    "ovr": 96,
+    "firstName": "Cole",
+    "lastName": "Kmet",
+    "program": "Collector's Series",
+    "archetype": "LS - Power"
+  },
+  {
+    "externalId": 112927217,
+    "ovr": 96,
+    "firstName": "Haloti",
+    "lastName": "Ngata",
+    "program": "Collector's Series",
+    "archetype": "DT - Nose Tackle"
+  },
+  {
+    "externalId": 114100487,
+    "ovr": 96,
+    "firstName": "Ronde",
+    "lastName": "Barber",
+    "program": "Ultimate Legends",
+    "archetype": "WR - Slot"
+  },
+  {
+    "externalId": 114101309,
+    "ovr": 96,
+    "firstName": "Damien",
+    "lastName": "Woody",
+    "program": "Ultimate Legends",
+    "archetype": "RT - Power"
+  },
+  {
+    "externalId": 86000678,
+    "ovr": 96,
+    "firstName": "Peyton",
+    "lastName": "Manning",
+    "program": "Reel Deals",
+    "archetype": "MIKE - Field General"
+  },
+  {
+    "externalId": 115120621,
+    "ovr": 96,
+    "firstName": "C.J.",
+    "lastName": "",
+    "program": "Flashbacks",
+    "archetype": "SS - Hybrid"
+  },
+  {
+    "externalId": 115120508,
+    "ovr": 96,
+    "firstName": "Mecole",
+    "lastName": "Hardman",
+    "program": "Flashbacks",
+    "archetype": "WR - Playmaker"
+  },
+  {
+    "externalId": 115117679,
+    "ovr": 96,
+    "firstName": "Ryan",
+    "lastName": "Kelly",
+    "program": "Flashbacks",
+    "archetype": "C - Pass Protector"
+  },
+  {
+    "externalId": 115113467,
+    "ovr": 96,
+    "firstName": "Tremon",
+    "lastName": "Smith",
+    "program": "Flashbacks",
+    "archetype": "CB - Zone"
+  },
+  {
+    "externalId": 112921667,
+    "ovr": 96,
+    "firstName": "Divine",
+    "lastName": "Deablo",
+    "program": "Collector's Series",
+    "archetype": "WILL - Run Stopper"
+  },
+  {
+    "externalId": 112922755,
+    "ovr": 96,
+    "firstName": "Hunter",
+    "lastName": "Luepke",
+    "program": "Collector's Series",
+    "archetype": "FB - Utility"
+  },
+  {
+    "externalId": 114103055,
+    "ovr": 96,
+    "firstName": "Keith",
+    "lastName": "Jackson",
+    "program": "Ultimate Legends",
+    "archetype": "SS - Run Support"
+  },
+  {
+    "externalId": 114111296,
+    "ovr": 96,
+    "firstName": "Dontari",
+    "lastName": "Poe",
+    "program": "Ultimate Legends",
+    "archetype": "FB - Utility"
+  },
+  {
+    "externalId": 11422227,
+    "ovr": 96,
+    "firstName": "Kerby",
+    "lastName": "Joseph",
+    "program": "Ranked",
+    "archetype": "FS - Zone"
+  },
+  {
+    "externalId": 11422689,
+    "ovr": 96,
+    "firstName": "Anthony",
+    "lastName": "Richardson",
+    "program": "Ranked",
+    "archetype": "QB - Scrambler"
+  },
+  {
+    "externalId": 11401895,
+    "ovr": 96,
+    "firstName": "Brian",
+    "lastName": "Urlacher",
+    "program": "Ranked",
+    "archetype": "MIKE - Field General"
+  },
+  {
+    "externalId": 80022893,
+    "ovr": 96,
+    "firstName": "Anthony",
+    "lastName": "Bradford",
+    "program": "NFL Draft",
+    "archetype": "RG - Power"
+  },
+  {
+    "externalId": 80013670,
+    "ovr": 96,
+    "firstName": "Evan",
+    "lastName": "Brown",
+    "program": "NFL Draft",
+    "archetype": "C - Agile"
+  },
+  {
+    "externalId": 80015256,
+    "ovr": 96,
+    "firstName": "Teddye",
+    "lastName": "Buchanan",
+    "program": "NFL Draft",
+    "archetype": "WILL - Pass Coverage"
+  },
+  {
+    "externalId": 80021111,
+    "ovr": 96,
+    "firstName": "Charlie",
+    "lastName": "Heck",
+    "program": "NFL Draft",
+    "archetype": "LT - Agile"
+  },
+  {
+    "externalId": 80014951,
+    "ovr": 96,
+    "firstName": "Jaden",
+    "lastName": "Hicks",
+    "program": "NFL Draft",
+    "archetype": "SS - Zone"
+  },
+  {
+    "externalId": 80019983,
+    "ovr": 96,
+    "firstName": "Marcus",
+    "lastName": "Mariota",
+    "program": "NFL Draft",
+    "archetype": "QB - Scrambler"
+  },
+  {
+    "externalId": 80014649,
+    "ovr": 96,
+    "firstName": "Adonai",
+    "lastName": "Mitchell",
+    "program": "NFL Draft",
+    "archetype": "WR - Playmaker"
+  },
+  {
+    "externalId": 80015249,
+    "ovr": 96,
+    "firstName": "Cody",
+    "lastName": "Simon",
+    "program": "NFL Draft",
+    "archetype": "MIKE - Run Stopper"
+  },
+  {
+    "externalId": 80021704,
+    "ovr": 96,
+    "firstName": "Benjamin",
+    "lastName": "St-Juste",
+    "program": "NFL Draft",
+    "archetype": "CB - Zone"
+  },
+  {
+    "externalId": 115117661,
+    "ovr": 96,
+    "firstName": "Kenny",
+    "lastName": "Clark",
+    "program": "Flashbacks",
+    "archetype": "DT - Nose Tackle"
+  },
+  {
+    "externalId": 115120952,
+    "ovr": 96,
+    "firstName": "Cole",
+    "lastName": "Kmet",
+    "program": "Flashbacks",
+    "archetype": "TE - Vertical Threat"
+  },
+  {
+    "externalId": 115121648,
+    "ovr": 96,
+    "firstName": "Trey",
+    "lastName": "Smith",
+    "program": "Flashbacks",
+    "archetype": "RG - Power"
+  },
+  {
+    "externalId": 115100279,
+    "ovr": 96,
+    "firstName": "Takeo",
+    "lastName": "Spikes",
+    "program": "Flashbacks",
+    "archetype": "MIKE - Run Stopper"
+  },
+  {
+    "externalId": 112920607,
+    "ovr": 96,
+    "firstName": "Mike",
+    "lastName": "Jackson",
+    "program": "Collector's Series",
+    "archetype": "CB - Man to Man"
+  },
+  {
+    "externalId": 112910283,
+    "ovr": 96,
+    "firstName": "Jeff",
+    "lastName": "Saturday",
+    "program": "Collector's Series",
+    "archetype": "C - Pass Protector"
+  },
+  {
+    "externalId": 112905350,
+    "ovr": 96,
+    "firstName": "Pat",
+    "lastName": "Summerall",
+    "program": "Collector's Series",
+    "archetype": "K - Accurate"
+  },
+  {
+    "externalId": 112922538,
+    "ovr": 96,
+    "firstName": "Ryan",
+    "lastName": "Wright",
+    "program": "Collector's Series",
+    "archetype": "P - Power"
+  },
+  {
+    "externalId": 114111613,
+    "ovr": 96,
+    "firstName": "Devin",
+    "lastName": "Hester",
+    "program": "Ultimate Legends",
+    "archetype": "CB - Man to Man"
+  },
+  {
+    "externalId": 114111469,
+    "ovr": 96,
+    "firstName": "Ronnie",
+    "lastName": "Lott",
+    "program": "Ultimate Legends",
+    "archetype": "WR - Playmaker"
+  },
+  {
+    "externalId": 115102532,
+    "ovr": 96,
+    "firstName": "Bud",
+    "lastName": "Dupree",
+    "program": "Flashbacks",
+    "archetype": "REDG - Power Rusher"
+  },
+  {
+    "externalId": 115121115,
+    "ovr": 96,
+    "firstName": "Colton",
+    "lastName": "McKivitz",
+    "program": "Flashbacks",
+    "archetype": "RT - Agile"
+  },
+  {
+    "externalId": 115110892,
+    "ovr": 96,
+    "firstName": "Gale",
+    "lastName": "Sayers",
+    "program": "Flashbacks",
+    "archetype": "HB - Elusive Back"
+  },
+  {
+    "externalId": 115120581,
+    "ovr": 96,
+    "firstName": "Devin",
+    "lastName": "White",
+    "program": "Flashbacks",
+    "archetype": "WILL - Run Stopper"
+  },
+  {
+    "externalId": 80015095,
+    "ovr": 96,
+    "firstName": "Luther",
+    "lastName": "Burden III",
+    "program": "NFL Draft",
+    "archetype": "WR - Playmaker"
+  },
+  {
+    "externalId": 80021447,
+    "ovr": 96,
+    "firstName": "Camryn",
+    "lastName": "Bynum",
+    "program": "NFL Draft",
+    "archetype": "SS - Run Support"
+  },
+  {
+    "externalId": 80013195,
+    "ovr": 96,
+    "firstName": "Jermaine",
+    "lastName": "Eluemunor",
+    "program": "NFL Draft",
+    "archetype": "RT - Power"
+  },
+  {
+    "externalId": 80020523,
+    "ovr": 96,
+    "firstName": "Dawson",
+    "lastName": "Knox",
+    "program": "NFL Draft",
+    "archetype": "TE - Vertical Threat"
+  },
+  {
+    "externalId": 80021115,
+    "ovr": 96,
+    "firstName": "Colton",
+    "lastName": "McKivitz",
+    "program": "NFL Draft",
+    "archetype": "RT - Agile"
+  },
+  {
+    "externalId": 80021457,
+    "ovr": 96,
+    "firstName": "Greg",
+    "lastName": "Newsome II",
+    "program": "NFL Draft",
+    "archetype": "CB - Man to Man"
+  },
+  {
+    "externalId": 80013481,
+    "ovr": 96,
+    "firstName": "Zach",
+    "lastName": "Sieler",
+    "program": "NFL Draft",
+    "archetype": "DT - Nose Tackle"
+  },
+  {
+    "externalId": 80022922,
+    "ovr": 96,
+    "firstName": "Tuli",
+    "lastName": "Tuipulotu",
+    "program": "NFL Draft",
+    "archetype": "LEDG - Run Stopper"
+  },
+  {
+    "externalId": 80021148,
+    "ovr": 96,
+    "firstName": "Logan",
+    "lastName": "Wilson",
+    "program": "NFL Draft",
+    "archetype": "WILL - Pass Coverage"
+  },
+  {
+    "externalId": 12232831,
+    "ovr": 96,
+    "firstName": "Bo",
+    "lastName": "Jackson",
+    "program": "Tribute",
+    "archetype": "TE - Vertical Threat"
+  },
+  {
+    "externalId": 11428436,
+    "ovr": 96,
+    "firstName": "Matt",
+    "lastName": "Forte",
+    "program": "Ranked",
+    "archetype": "HB - Receiving Back"
+  },
+  {
+    "externalId": 11414932,
+    "ovr": 96,
+    "firstName": "Quinyon",
+    "lastName": "Mitchell",
+    "program": "Ranked",
+    "archetype": "CB - Man to Man"
+  },
+  {
+    "externalId": 11420436,
+    "ovr": 96,
+    "firstName": "Donald",
+    "lastName": "Parham",
+    "program": "Ranked",
+    "archetype": "TE - Vertical Threat"
+  },
+  {
+    "externalId": 119013202,
+    "ovr": 96,
+    "firstName": "Jessie",
+    "lastName": "Bates III",
+    "program": "Redux",
+    "archetype": "FS - Zone"
+  },
+  {
+    "externalId": 119102918,
+    "ovr": 96,
+    "firstName": "Mel",
+    "lastName": "Blount",
+    "program": "Redux",
+    "archetype": "CB - Man to Man"
+  },
+  {
+    "externalId": 119022211,
+    "ovr": 96,
+    "firstName": "Coby",
+    "lastName": "Bryant",
+    "program": "Redux",
+    "archetype": "SS - Zone"
+  },
+  {
+    "externalId": 119005353,
+    "ovr": 96,
+    "firstName": "Terrell",
+    "lastName": "Buckley",
+    "program": "Redux",
+    "archetype": "CB - Man to Man"
+  },
+  {
+    "externalId": 119101657,
+    "ovr": 96,
+    "firstName": "Plaxico",
+    "lastName": "Burress",
+    "program": "Redux",
+    "archetype": "WR - Physical"
+  },
+  {
+    "externalId": 119011413,
+    "ovr": 96,
+    "firstName": "Marshall",
+    "lastName": "Faulk",
+    "program": "Redux",
+    "archetype": "HB - Receiving Back"
+  },
+  {
+    "externalId": 119014840,
+    "ovr": 96,
+    "firstName": "Dwight",
+    "lastName": "Freeney",
+    "program": "Redux",
+    "archetype": "REDG - Speed Rusher"
+  },
+  {
+    "externalId": 119123026,
+    "ovr": 96,
+    "firstName": "Christian",
+    "lastName": "Gonzalez",
+    "program": "Redux",
+    "archetype": "CB - Man to Man"
+  },
+  {
+    "externalId": 119017471,
+    "ovr": 96,
+    "firstName": "DeAngelo",
+    "lastName": "Hall",
+    "program": "Redux",
+    "archetype": "CB - Zone"
+  },
+  {
+    "externalId": 119017643,
+    "ovr": 96,
+    "firstName": "Hunter",
+    "lastName": "Henry",
+    "program": "Redux",
+    "archetype": "TE - Possession"
+  },
+  {
+    "externalId": 119011613,
+    "ovr": 96,
+    "firstName": "Devin",
+    "lastName": "Hester",
+    "program": "Redux",
+    "archetype": "WR - Deep Threat"
+  },
+  {
+    "externalId": 119012558,
+    "ovr": 96,
+    "firstName": "Cooper",
+    "lastName": "Kupp",
+    "program": "Redux",
+    "archetype": "WR - Slot"
+  },
+  {
+    "externalId": 119020932,
+    "ovr": 96,
+    "firstName": "CeeDee",
+    "lastName": "Lamb",
+    "program": "Redux",
+    "archetype": "WR - Playmaker"
+  },
+  {
+    "externalId": 119001454,
+    "ovr": 96,
+    "firstName": "Jamal",
+    "lastName": "Lewis",
+    "program": "Redux",
+    "archetype": "HB - Power Back"
+  },
+  {
+    "externalId": 119027284,
+    "ovr": 96,
+    "firstName": "Marcedes",
+    "lastName": "Lewis",
+    "program": "Redux",
+    "archetype": "TE - Blocking"
+  },
+  {
+    "externalId": 119020143,
+    "ovr": 96,
+    "firstName": "Clay",
+    "lastName": "Matthews",
+    "program": "Redux",
+    "archetype": "REDG - Power Rusher"
+  },
+  {
+    "externalId": 119115097,
+    "ovr": 96,
+    "firstName": "Tetairoa",
+    "lastName": "McMillan",
+    "program": "Redux",
+    "archetype": "WR - Physical"
+  },
+  {
+    "externalId": 119000833,
+    "ovr": 96,
+    "firstName": "Donovan",
+    "lastName": "McNabb",
+    "program": "Redux",
+    "archetype": "QB - Strong Arm"
+  },
+  {
+    "externalId": 119116548,
+    "ovr": 96,
+    "firstName": "Troy",
+    "lastName": "Polamalu",
+    "program": "Redux",
+    "archetype": "SS - Hybrid"
+  },
+  {
+    "externalId": 119010894,
+    "ovr": 96,
+    "firstName": "Jerry",
+    "lastName": "Rice",
+    "program": "Redux",
+    "archetype": "WR - Playmaker"
+  },
+  {
+    "externalId": 119015266,
+    "ovr": 96,
+    "firstName": "Carson",
+    "lastName": "Schwesinger",
+    "program": "Redux",
+    "archetype": "MIKE - Field General"
+  },
+  {
+    "externalId": 119002917,
+    "ovr": 96,
+    "firstName": "Mike",
+    "lastName": "Singletary",
+    "program": "Redux",
+    "archetype": "MIKE - Run Stopper"
+  },
+  {
+    "externalId": 66021151,
+    "ovr": 96,
+    "firstName": "Jeremy",
+    "lastName": "Chinn",
+    "program": "NFL Combine",
+    "archetype": "SS - Run Support"
+  },
+  {
+    "externalId": 66028339,
+    "ovr": 96,
+    "firstName": "Darren",
+    "lastName": "McFadden",
+    "program": "NFL Combine",
+    "archetype": "HB - Power Back"
+  },
+  {
+    "externalId": 66032363,
+    "ovr": 96,
+    "firstName": "Dontari",
+    "lastName": "Poe",
+    "program": "NFL Combine",
+    "archetype": "QB - Scrambler"
+  },
+  {
+    "externalId": 66022698,
+    "ovr": 96,
+    "firstName": "Peter",
+    "lastName": "Skoronski",
+    "program": "NFL Combine",
+    "archetype": "LG - Agile"
+  },
+  {
+    "externalId": 66012700,
+    "ovr": 96,
+    "firstName": "Jonnu",
+    "lastName": "Smith",
+    "program": "NFL Combine",
+    "archetype": "TE - Vertical Threat"
+  },
+  {
+    "externalId": 66013091,
+    "ovr": 96,
+    "firstName": "Vita",
+    "lastName": "Vea",
+    "program": "NFL Combine",
+    "archetype": "DT - Nose Tackle"
+  },
+  {
+    "externalId": 112802923,
+    "ovr": 96,
+    "firstName": "R. White",
+    "lastName": "Manster",
+    "program": "Collector's Series",
+    "archetype": "DT - Speed Rusher"
+  },
+  {
+    "externalId": 112827487,
+    "ovr": 96,
+    "firstName": "O. Daniels",
+    "lastName": "",
+    "program": "Collector's Series",
+    "archetype": "TE - Possession"
+  },
+  {
+    "externalId": 11305349,
+    "ovr": 96,
+    "firstName": "Robert",
+    "lastName": "Brazile",
+    "program": "Ranked",
+    "archetype": "WILL - Run Stopper"
+  },
+  {
+    "externalId": 11320982,
+    "ovr": 96,
+    "firstName": "Nnamdi",
+    "lastName": "Madubuike",
+    "program": "Ranked",
+    "archetype": "DT - Nose Tackle"
+  },
+  {
+    "externalId": 11315065,
+    "ovr": 96,
+    "firstName": "Dont&#x27;e",
+    "lastName": "Thornton Jr",
+    "program": "Ranked",
+    "archetype": "WR - Deep Threat"
+  },
+  {
+    "externalId": 66027200,
+    "ovr": 96,
+    "firstName": "Antonio",
+    "lastName": "Cromartie",
+    "program": "NFL Combine",
+    "archetype": "CB - Man to Man"
+  },
+  {
+    "externalId": 114002999,
+    "ovr": 96,
+    "firstName": "John",
+    "lastName": "Hannah",
+    "program": "Ultimate Legends",
+    "archetype": "LG - Agile"
+  },
+  {
+    "externalId": 114002935,
+    "ovr": 96,
+    "firstName": "Ken",
+    "lastName": "Houston",
+    "program": "Ultimate Legends",
+    "archetype": "SS - Zone"
+  },
+  {
+    "externalId": 66010737,
+    "ovr": 96,
+    "firstName": "Von",
+    "lastName": "Miller",
+    "program": "NFL Combine",
+    "archetype": "REDG - Speed Rusher"
+  },
+  {
+    "externalId": 66020971,
+    "ovr": 96,
+    "firstName": "Tristan",
+    "lastName": "Wirfs",
+    "program": "NFL Combine",
+    "archetype": "RT - Pass Protector"
+  },
+  {
+    "externalId": 18015328,
+    "ovr": 96,
+    "firstName": "Maxwell",
+    "lastName": "Hairston",
+    "program": "Gauntlet",
+    "archetype": "CB - Man to Man"
+  },
+  {
+    "externalId": 18115328,
+    "ovr": 96,
+    "firstName": "Maxwell",
+    "lastName": "Hairston",
+    "program": "Gauntlet",
+    "archetype": "CB - Man to Man"
+  },
+  {
+    "externalId": 66020076,
+    "ovr": 96,
+    "firstName": "Brian",
+    "lastName": "Cushing",
+    "program": "NFL Combine",
+    "archetype": "SAM - Pass Coverage"
+  },
+  {
+    "externalId": 66022164,
+    "ovr": 96,
+    "firstName": "Jordan",
+    "lastName": "Davis",
+    "program": "NFL Combine",
+    "archetype": "DT - Nose Tackle"
+  },
+  {
+    "externalId": 66011287,
+    "ovr": 96,
+    "firstName": "David",
+    "lastName": "DeCastro",
+    "program": "NFL Combine",
+    "archetype": "RG - Power"
+  },
+  {
+    "externalId": 66020086,
+    "ovr": 96,
+    "firstName": "Darrius",
+    "lastName": "Heyward-Bey",
+    "program": "NFL Combine",
+    "archetype": "WR - Deep Threat"
+  },
+  {
+    "externalId": 66013080,
+    "ovr": 96,
+    "firstName": "Derwin",
+    "lastName": "James Jr",
+    "program": "NFL Combine",
+    "archetype": "SS - Run Support"
+  },
+  {
+    "externalId": 66010690,
+    "ovr": 96,
+    "firstName": "Jason",
+    "lastName": "Kelce",
+    "program": "NFL Combine",
+    "archetype": "C - Agile"
+  },
+  {
+    "externalId": 66010829,
+    "ovr": 96,
+    "firstName": "Cam",
+    "lastName": "Newton",
+    "program": "NFL Combine",
+    "archetype": "WR - Playmaker"
+  },
+  {
+    "externalId": 66015291,
+    "ovr": 96,
+    "firstName": "Darien",
+    "lastName": "Porter",
+    "program": "NFL Combine",
+    "archetype": "CB - Man to Man"
+  },
+  {
+    "externalId": 115013192,
+    "ovr": 96,
+    "firstName": "Mike",
+    "lastName": "Gesicki",
+    "program": "Flashbacks",
+    "archetype": "TE - Vertical Threat"
+  },
+  {
+    "externalId": 115014701,
+    "ovr": 96,
+    "firstName": "Tyler",
+    "lastName": "Guyton",
+    "program": "Flashbacks",
+    "archetype": "LT - Agile"
+  },
+  {
+    "externalId": 115020117,
+    "ovr": 96,
+    "firstName": "Brian",
+    "lastName": "Orakpo",
+    "program": "Flashbacks",
+    "archetype": "WILL - Run Stopper"
+  },
+  {
+    "externalId": 115017550,
+    "ovr": 96,
+    "firstName": "Sheldon",
+    "lastName": "Rankins",
+    "program": "Flashbacks",
+    "archetype": "DT - Nose Tackle"
+  },
+  {
+    "externalId": 65132513,
+    "ovr": 96,
+    "firstName": "Julius",
+    "lastName": "Peppers",
+    "program": "Genki Force",
+    "archetype": "WILL - Run Stopper"
+  },
+  {
+    "externalId": 112801354,
+    "ovr": 96,
+    "firstName": "T. Brown",
+    "lastName": "Mr. Raider",
+    "program": "Collector's Series",
+    "archetype": "WR - Slot"
+  },
+  {
+    "externalId": 112811204,
+    "ovr": 96,
+    "firstName": "R. Lane",
+    "lastName": "Night Train",
+    "program": "Collector's Series",
+    "archetype": "FS - Zone"
+  },
+  {
+    "externalId": 58100366,
+    "ovr": 96,
+    "firstName": "Terrell",
+    "lastName": "Davis",
+    "program": "NFL Honors",
+    "archetype": "HB - Elusive Back"
+  },
+  {
+    "externalId": 114002908,
+    "ovr": 96,
+    "firstName": "Ed Too Tall",
+    "lastName": "Jones",
+    "program": "Ultimate Legends",
+    "archetype": "LEDG - Power Rusher"
+  },
+  {
+    "externalId": 114012195,
+    "ovr": 96,
+    "firstName": "Orlando",
+    "lastName": "Pace",
+    "program": "Ultimate Legends",
+    "archetype": "LT - Pass Protector"
+  },
+  {
+    "externalId": 114026751,
+    "ovr": 96,
+    "firstName": "Antrel",
+    "lastName": "Rolle",
+    "program": "Ultimate Legends",
+    "archetype": "FS - Zone"
+  },
+  {
+    "externalId": 58110891,
+    "ovr": 96,
+    "firstName": "Lawrence",
+    "lastName": "Taylor",
+    "program": "NFL Honors",
+    "archetype": "REDG - Power Rusher"
+  },
+  {
+    "externalId": 114003051,
+    "ovr": 96,
+    "firstName": "Thurman",
+    "lastName": "Thomas",
+    "program": "Ultimate Legends",
+    "archetype": "HB - Elusive Back"
+  },
+  {
+    "externalId": 65122054,
+    "ovr": 96,
+    "firstName": "James",
+    "lastName": "Cook",
+    "program": "Genki Force",
+    "archetype": "HB - Power Back"
+  },
+  {
+    "externalId": 65222054,
+    "ovr": 96,
+    "firstName": "James",
+    "lastName": "Cook",
+    "program": "Genki Force",
+    "archetype": "HB - Receiving Back"
+  },
+  {
+    "externalId": 65022054,
+    "ovr": 96,
+    "firstName": "James",
+    "lastName": "Cook",
+    "program": "Genki Force",
+    "archetype": "HB - Elusive Back"
+  },
+  {
+    "externalId": 65215171,
+    "ovr": 96,
+    "firstName": "Donovan",
+    "lastName": "Ezeiruaku",
+    "program": "Genki Force",
+    "archetype": "REDG - Run Stopper"
+  },
+  {
+    "externalId": 65015171,
+    "ovr": 96,
+    "firstName": "Donovan",
+    "lastName": "Ezeiruaku",
+    "program": "Genki Force",
+    "archetype": "REDG - Speed Rusher"
+  },
+  {
+    "externalId": 65115171,
+    "ovr": 96,
+    "firstName": "Donovan",
+    "lastName": "Ezeiruaku",
+    "program": "Genki Force",
+    "archetype": "REDG - Power Rusher"
+  },
+  {
+    "externalId": 65121291,
+    "ovr": 96,
+    "firstName": "Robert",
+    "lastName": "Hunt",
+    "program": "Genki Force",
+    "archetype": "RG - Pass Protector"
+  },
+  {
+    "externalId": 65221291,
+    "ovr": 96,
+    "firstName": "Robert",
+    "lastName": "Hunt",
+    "program": "Genki Force",
+    "archetype": "RG - Agile"
+  },
+  {
+    "externalId": 65021291,
+    "ovr": 96,
+    "firstName": "Robert",
+    "lastName": "Hunt",
+    "program": "Genki Force",
+    "archetype": "RG - Power"
+  },
+  {
+    "externalId": 65122072,
+    "ovr": 96,
+    "firstName": "Chris",
+    "lastName": "Olave",
+    "program": "Genki Force",
+    "archetype": "WR - Slot"
+  },
+  {
+    "externalId": 65222072,
+    "ovr": 96,
+    "firstName": "Chris",
+    "lastName": "Olave",
+    "program": "Genki Force",
+    "archetype": "WR - Playmaker"
+  },
+  {
+    "externalId": 65022072,
+    "ovr": 96,
+    "firstName": "Chris",
+    "lastName": "Olave",
+    "program": "Genki Force",
+    "archetype": "WR - Deep Threat"
+  },
+  {
+    "externalId": 65027021,
+    "ovr": 96,
+    "firstName": "Jason",
+    "lastName": "Peters",
+    "program": "Genki Force",
+    "archetype": "LT - Agile"
+  },
+  {
+    "externalId": 65222230,
+    "ovr": 96,
+    "firstName": "Jalen",
+    "lastName": "Pitre",
+    "program": "Genki Force",
+    "archetype": "FS - Hybrid"
+  },
+  {
+    "externalId": 65122230,
+    "ovr": 96,
+    "firstName": "Jalen",
+    "lastName": "Pitre",
+    "program": "Genki Force",
+    "archetype": "FS - Run Support"
+  },
+  {
+    "externalId": 65022230,
+    "ovr": 96,
+    "firstName": "Jalen",
+    "lastName": "Pitre",
+    "program": "Genki Force",
+    "archetype": "FS - Zone"
+  },
+  {
+    "externalId": 65022220,
+    "ovr": 96,
+    "firstName": "Cam",
+    "lastName": "Taylor-Britt",
+    "program": "Genki Force",
+    "archetype": "CB - Zone"
+  },
+  {
+    "externalId": 65222220,
+    "ovr": 96,
+    "firstName": "Cam",
+    "lastName": "Taylor-Britt",
+    "program": "Genki Force",
+    "archetype": "CB - Slot"
+  },
+  {
+    "externalId": 65122220,
+    "ovr": 96,
+    "firstName": "Cam",
+    "lastName": "Taylor-Britt",
+    "program": "Genki Force",
+    "archetype": "CB - Man to Man"
+  },
+  {
+    "externalId": 115002398,
+    "ovr": 96,
+    "firstName": "Melvin",
+    "lastName": "Gordon III",
+    "program": "Flashbacks",
+    "archetype": "HB - Elusive Back"
+  },
+  {
+    "externalId": 115009837,
+    "ovr": 96,
+    "firstName": "Brandon",
+    "lastName": "Graham",
+    "program": "Flashbacks",
+    "archetype": "LEDG - Run Stopper"
+  },
+  {
+    "externalId": 115020425,
+    "ovr": 96,
+    "firstName": "Bobby",
+    "lastName": "Okereke",
+    "program": "Flashbacks",
+    "archetype": "MIKE - Field General"
+  },
+  {
+    "externalId": 115021081,
+    "ovr": 96,
+    "firstName": "Michael",
+    "lastName": "Pittman Jr",
+    "program": "Flashbacks",
+    "archetype": "WR - Physical"
+  },
+  {
+    "externalId": 58100006,
+    "ovr": 96,
+    "firstName": "Christian",
+    "lastName": "McCaffrey",
+    "program": "NFL Honors",
+    "archetype": "HB - Receiving Back"
+  },
+  {
+    "externalId": 58100007,
+    "ovr": 96,
+    "firstName": "Bobby",
+    "lastName": "Wagner",
+    "program": "NFL Honors",
+    "archetype": "MIKE - Run Stopper"
+  },
+  {
+    "externalId": 112814694,
+    "ovr": 96,
+    "firstName": "J. Alt",
+    "lastName": "",
+    "program": "Collector's Series",
+    "archetype": "RT - Power"
+  },
+  {
+    "externalId": 112814932,
+    "ovr": 96,
+    "firstName": "Q. Mitchell",
+    "lastName": "Speed Buggy",
+    "program": "Collector's Series",
+    "archetype": "CB - Slot"
+  },
+  {
+    "externalId": 112801895,
+    "ovr": 96,
+    "firstName": "B. Urlacher",
+    "lastName": "The Bear",
+    "program": "Collector's Series",
+    "archetype": "MIKE - Field General"
+  },
+  {
+    "externalId": 112805351,
+    "ovr": 96,
+    "firstName": "J. Riggins",
+    "lastName": "The Diesel",
+    "program": "Collector's Series",
+    "archetype": "FB - Utility"
+  },
+  {
+    "externalId": 114026470,
+    "ovr": 96,
+    "firstName": "James",
+    "lastName": "Harrison",
+    "program": "Ultimate Legends",
+    "archetype": "SAM - Run Stopper"
+  },
+  {
+    "externalId": 114000373,
+    "ovr": 96,
+    "firstName": "Tom",
+    "lastName": "Nalen",
+    "program": "Ultimate Legends",
+    "archetype": "C - Agile"
+  },
+  {
+    "externalId": 114027505,
+    "ovr": 96,
+    "firstName": "Walter",
+    "lastName": "Payton",
+    "program": "Ultimate Legends",
+    "archetype": "HB - Elusive Back"
+  },
+  {
+    "externalId": 114003029,
+    "ovr": 96,
+    "firstName": "Jimmy",
+    "lastName": "Smith",
+    "program": "Ultimate Legends",
+    "archetype": "WR - Slot"
+  },
+  {
+    "externalId": 114010693,
+    "ovr": 96,
+    "firstName": "J.J.",
+    "lastName": "Watt",
+    "program": "Ultimate Legends",
+    "archetype": "REDG - Power Rusher"
+  },
+  {
+    "externalId": 114017417,
+    "ovr": 96,
+    "firstName": "Vince",
+    "lastName": "Wilfork",
+    "program": "Ultimate Legends",
+    "archetype": "DT - Nose Tackle"
+  },
+  {
+    "externalId": 58100005,
+    "ovr": 96,
+    "firstName": "Myles",
+    "lastName": "Garrett",
+    "program": "NFL Honors",
+    "archetype": "REDG - Power Rusher"
+  },
+  {
+    "externalId": 18022695,
+    "ovr": 96,
+    "firstName": "Quentin",
+    "lastName": "Johnston",
+    "program": "Gauntlet",
+    "archetype": "WR - Playmaker"
+  },
+  {
+    "externalId": 18122695,
+    "ovr": 96,
+    "firstName": "Quentin",
+    "lastName": "Johnston",
+    "program": "Gauntlet",
+    "archetype": "WR - Playmaker"
+  },
+  {
+    "externalId": 58100004,
+    "ovr": 96,
+    "firstName": "Jaxon",
+    "lastName": "Smith-Njigba",
+    "program": "NFL Honors",
+    "archetype": "WR - Slot"
+  },
+  {
+    "externalId": 58100003,
+    "ovr": 96,
+    "firstName": "Matthew",
+    "lastName": "Stafford",
+    "program": "NFL Honors",
+    "archetype": "QB - Field General"
+  },
+  {
+    "externalId": 65117542,
+    "ovr": 96,
+    "firstName": "DeForest",
+    "lastName": "Buckner",
+    "program": "Genki Force",
+    "archetype": "DT - Power Rusher"
+  },
+  {
+    "externalId": 65017542,
+    "ovr": 96,
+    "firstName": "DeForest",
+    "lastName": "Buckner",
+    "program": "Genki Force",
+    "archetype": "DT - Nose Tackle"
+  },
+  {
+    "externalId": 65217542,
+    "ovr": 96,
+    "firstName": "DeForest",
+    "lastName": "Buckner",
+    "program": "Genki Force",
+    "archetype": "DT - Speed Rusher"
+  },
+  {
+    "externalId": 65021696,
+    "ovr": 96,
+    "firstName": "Tyson",
+    "lastName": "Campbell",
+    "program": "Genki Force",
+    "archetype": "CB - Zone"
+  },
+  {
+    "externalId": 65012246,
+    "ovr": 96,
+    "firstName": "Brian",
+    "lastName": "Dawkins",
+    "program": "Genki Force",
+    "archetype": "SS - Run Support"
+  },
+  {
+    "externalId": 65212246,
+    "ovr": 96,
+    "firstName": "Brian",
+    "lastName": "Dawkins",
+    "program": "Genki Force",
+    "archetype": "SS - Hybrid"
+  },
+  {
+    "externalId": 65112246,
+    "ovr": 96,
+    "firstName": "Brian",
+    "lastName": "Dawkins",
+    "program": "Genki Force",
+    "archetype": "SS - Zone"
+  },
+  {
+    "externalId": 65214909,
+    "ovr": 96,
+    "firstName": "Cedric",
+    "lastName": "Gray",
+    "program": "Genki Force",
+    "archetype": "MIKE - Run Stopper"
+  },
+  {
+    "externalId": 65114909,
+    "ovr": 96,
+    "firstName": "Cedric",
+    "lastName": "Gray",
+    "program": "Genki Force",
+    "archetype": "MIKE - Field General"
+  },
+  {
+    "externalId": 65014909,
+    "ovr": 96,
+    "firstName": "Cedric",
+    "lastName": "Gray",
+    "program": "Genki Force",
+    "archetype": "MIKE - Pass Coverage"
+  },
+  {
+    "externalId": 65220961,
+    "ovr": 96,
+    "firstName": "Justin",
+    "lastName": "Jefferson",
+    "program": "Genki Force",
+    "archetype": "WR - Physical"
+  },
+  {
+    "externalId": 65020961,
+    "ovr": 96,
+    "firstName": "Justin",
+    "lastName": "Jefferson",
+    "program": "Genki Force",
+    "archetype": "WR - Deep Threat"
+  },
+  {
+    "externalId": 65120961,
+    "ovr": 96,
+    "firstName": "Justin",
+    "lastName": "Jefferson",
+    "program": "Genki Force",
+    "archetype": "WR - Slot"
+  },
+  {
+    "externalId": 65222699,
+    "ovr": 96,
+    "firstName": "Paris",
+    "lastName": "Johnson Jr",
+    "program": "Genki Force",
+    "archetype": "LT - Pass Protector"
+  },
+  {
+    "externalId": 65022699,
+    "ovr": 96,
+    "firstName": "Paris",
+    "lastName": "Johnson Jr",
+    "program": "Genki Force",
+    "archetype": "LT - Power"
+  },
+  {
+    "externalId": 65122699,
+    "ovr": 96,
+    "firstName": "Paris",
+    "lastName": "Johnson Jr",
+    "program": "Genki Force",
+    "archetype": "LT - Agile"
+  },
+  {
+    "externalId": 65222826,
+    "ovr": 96,
+    "firstName": "Sam",
+    "lastName": "LaPorta",
+    "program": "Genki Force",
+    "archetype": "TE - Blocking"
+  },
+  {
+    "externalId": 65122826,
+    "ovr": 96,
+    "firstName": "Sam",
+    "lastName": "LaPorta",
+    "program": "Genki Force",
+    "archetype": "TE - Possession"
+  },
+  {
+    "externalId": 65022826,
+    "ovr": 96,
+    "firstName": "Sam",
+    "lastName": "LaPorta",
+    "program": "Genki Force",
+    "archetype": "TE - Vertical Threat"
+  },
+  {
+    "externalId": 65112528,
+    "ovr": 96,
+    "firstName": "Marshon",
+    "lastName": "Lattimore",
+    "program": "Genki Force",
+    "archetype": "CB - Zone"
+  },
+  {
+    "externalId": 65212528,
+    "ovr": 96,
+    "firstName": "Marshon",
+    "lastName": "Lattimore",
+    "program": "Genki Force",
+    "archetype": "CB - Slot"
+  },
+  {
+    "externalId": 65012528,
+    "ovr": 96,
+    "firstName": "Marshon",
+    "lastName": "Lattimore",
+    "program": "Genki Force",
+    "archetype": "CB - Man to Man"
+  },
+  {
+    "externalId": 65221553,
+    "ovr": 96,
+    "firstName": "Trevor",
+    "lastName": "Lawrence",
+    "program": "Genki Force",
+    "archetype": "QB - Improviser"
+  },
+  {
+    "externalId": 65121553,
+    "ovr": 96,
+    "firstName": "Trevor",
+    "lastName": "Lawrence",
+    "program": "Genki Force",
+    "archetype": "QB - Field General"
+  },
+  {
+    "externalId": 65021553,
+    "ovr": 96,
+    "firstName": "Trevor",
+    "lastName": "Lawrence",
+    "program": "Genki Force",
+    "archetype": "QB - Scrambler"
+  },
+  {
+    "externalId": 65120728,
+    "ovr": 96,
+    "firstName": "Quincy",
+    "lastName": "Williams",
+    "program": "Genki Force",
+    "archetype": "WILL - Run Stopper"
+  },
+  {
+    "externalId": 65020728,
+    "ovr": 96,
+    "firstName": "Quincy",
+    "lastName": "Williams",
+    "program": "Genki Force",
+    "archetype": "WILL - Pass Coverage"
+  },
+  {
+    "externalId": 65220728,
+    "ovr": 96,
+    "firstName": "Quincy",
+    "lastName": "Williams",
+    "program": "Genki Force",
+    "archetype": "WILL - Field General"
+  },
+  {
+    "externalId": 115011439,
+    "ovr": 96,
+    "firstName": "Mark",
+    "lastName": "Barron",
+    "program": "Flashbacks",
+    "archetype": "SS - Zone"
+  },
+  {
+    "externalId": 12020495,
+    "ovr": 96,
+    "firstName": "A.J.",
+    "lastName": "Brown",
+    "program": "Crystal",
+    "archetype": "WR - Physical"
+  },
+  {
+    "externalId": 115011210,
+    "ovr": 96,
+    "firstName": "Robert",
+    "lastName": "Griffin III",
+    "program": "Flashbacks",
+    "archetype": "QB - Scrambler"
+  },
+  {
+    "externalId": 115013169,
+    "ovr": 96,
+    "firstName": "Donte",
+    "lastName": "Jackson",
+    "program": "Flashbacks",
+    "archetype": "CB - Man to Man"
+  },
+  {
+    "externalId": 115022103,
+    "ovr": 96,
+    "firstName": "Trevor",
+    "lastName": "Penning",
+    "program": "Flashbacks",
+    "archetype": "LG - Power"
+  },
+  {
+    "externalId": 12022241,
+    "ovr": 96,
+    "firstName": "Isaiah",
+    "lastName": "Pola-Mao",
+    "program": "Crystal",
+    "archetype": "SS - Hybrid"
+  },
+  {
+    "externalId": 112820932,
+    "ovr": 96,
+    "firstName": "CeeDee",
+    "lastName": "Lamb",
+    "program": "Collector's Series",
+    "archetype": "WR - Playmaker"
+  },
+  {
+    "externalId": 56309602,
+    "ovr": 96,
+    "firstName": "Troy",
+    "lastName": "Polamalu",
+    "program": "Super Bowl",
+    "archetype": "SS - Hybrid"
+  },
+  {
+    "externalId": 56309601,
+    "ovr": 96,
+    "firstName": "Jerry",
+    "lastName": "Rice",
+    "program": "Super Bowl",
+    "archetype": "WR - Playmaker"
+  },
+  {
+    "externalId": 110000833,
+    "ovr": 96,
+    "firstName": "Donovan",
+    "lastName": "McNabb",
+    "program": "Legends",
+    "archetype": "QB - Strong Arm"
+  },
+  {
+    "externalId": 58000002,
+    "ovr": 96,
+    "firstName": "Tetairoa",
+    "lastName": "McMillan",
+    "program": "NFL Honors",
+    "archetype": "WR - Physical"
+  },
+  {
+    "externalId": 58000001,
+    "ovr": 96,
+    "firstName": "Carson",
+    "lastName": "Schwesinger",
+    "program": "NFL Honors",
+    "archetype": "MIKE - Field General"
+  },
+  {
+    "externalId": 56209604,
+    "ovr": 96,
+    "firstName": "Coby",
+    "lastName": "Bryant",
+    "program": "Super Bowl",
+    "archetype": "SS - Zone"
+  },
+  {
+    "externalId": 56209602,
+    "ovr": 96,
+    "firstName": "Christian",
+    "lastName": "Gonzalez",
+    "program": "Super Bowl",
+    "archetype": "CB - Man to Man"
+  },
+  {
+    "externalId": 56209601,
+    "ovr": 96,
+    "firstName": "Hunter",
+    "lastName": "Henry",
+    "program": "Super Bowl",
+    "archetype": "TE - Possession"
+  },
+  {
+    "externalId": 56209603,
+    "ovr": 96,
+    "firstName": "Cooper",
+    "lastName": "Kupp",
+    "program": "Super Bowl",
+    "archetype": "WR - Slot"
+  },
+  {
+    "externalId": 115001454,
+    "ovr": 96,
+    "firstName": "Jamal",
+    "lastName": "Lewis",
+    "program": "Flashbacks",
+    "archetype": "HB - Power Back"
+  },
+  {
+    "externalId": 115020143,
+    "ovr": 96,
+    "firstName": "Clay",
+    "lastName": "Matthews",
+    "program": "Flashbacks",
+    "archetype": "REDG - Power Rusher"
+  },
+  {
+    "externalId": 56109601,
+    "ovr": 96,
+    "firstName": "Plaxico",
+    "lastName": "Burress",
+    "program": "Super Bowl",
+    "archetype": "WR - Physical"
+  },
+  {
+    "externalId": 56109602,
+    "ovr": 96,
+    "firstName": "Dwight",
+    "lastName": "Freeney",
+    "program": "Super Bowl",
+    "archetype": "REDG - Speed Rusher"
+  },
+  {
+    "externalId": 112813202,
+    "ovr": 96,
+    "firstName": "Jessie",
+    "lastName": "Bates III",
+    "program": "Collector's Series",
+    "archetype": "FS - Zone"
+  },
+  {
+    "externalId": 11120430,
+    "ovr": 96,
+    "firstName": "Kyler",
+    "lastName": "Murray",
+    "program": "Ranked",
+    "archetype": "QB - Scrambler"
+  },
+  {
+    "externalId": 11121000,
+    "ovr": 96,
+    "firstName": "Isaiah",
+    "lastName": "Simmons",
+    "program": "Ranked",
+    "archetype": "SS - Run Support"
+  },
+  {
+    "externalId": 11114130,
+    "ovr": 96,
+    "firstName": "LaDainian",
+    "lastName": "Tomlinson",
+    "program": "Ranked",
+    "archetype": "HB - Elusive Back"
+  },
+  {
+    "externalId": 110005353,
+    "ovr": 96,
+    "firstName": "Terrell",
+    "lastName": "Buckley",
+    "program": "Legends",
+    "archetype": "CB - Man to Man"
+  },
+  {
+    "externalId": 56009604,
+    "ovr": 96,
+    "firstName": "Mel",
+    "lastName": "Blount",
+    "program": "Super Bowl",
+    "archetype": "CB - Man to Man"
+  },
+  {
+    "externalId": 56009601,
+    "ovr": 96,
+    "firstName": "Marshall",
+    "lastName": "Faulk",
+    "program": "Super Bowl",
+    "archetype": "HB - Receiving Back"
+  },
+  {
+    "externalId": 56009602,
+    "ovr": 96,
+    "firstName": "Devin",
+    "lastName": "Hester",
+    "program": "Super Bowl",
+    "archetype": "WR - Deep Threat"
+  },
+  {
+    "externalId": 56009603,
+    "ovr": 96,
+    "firstName": "Mike",
+    "lastName": "Singletary",
+    "program": "Super Bowl",
+    "archetype": "MIKE - Run Stopper"
+  },
+  {
+    "externalId": 115017471,
+    "ovr": 96,
+    "firstName": "DeAngelo",
+    "lastName": "Hall",
+    "program": "Flashbacks",
+    "archetype": "CB - Zone"
+  },
+  {
+    "externalId": 115027284,
+    "ovr": 96,
+    "firstName": "Marcedes",
+    "lastName": "Lewis",
+    "program": "Flashbacks",
+    "archetype": "TE - Blocking"
+  },
+  {
+    "externalId": 111000233,
+    "ovr": 96,
+    "firstName": "Brock",
+    "lastName": "Purdy",
+    "program": "TOTW",
+    "archetype": "QB - Field General"
+  },
+  {
+    "externalId": 111000234,
+    "ovr": 96,
+    "firstName": "Jeffery",
+    "lastName": "Simmons",
+    "program": "TOTW",
+    "archetype": "DT - Nose Tackle"
+  },
+  {
+    "externalId": 13521587,
+    "ovr": 96,
+    "firstName": "Nico",
+    "lastName": "Collins",
+    "program": "Team Builders",
+    "archetype": "WR - Deep Threat"
+  },
+  {
+    "externalId": 13520410,
+    "ovr": 96,
+    "firstName": "Josh",
+    "lastName": "Hines-Allen",
+    "program": "Team Builders",
+    "archetype": "REDG - Speed Rusher"
+  },
+  {
+    "externalId": 11015117,
+    "ovr": 96,
+    "firstName": "Colston",
+    "lastName": "Loveland",
+    "program": "Ranked",
+    "archetype": "TE - Vertical Threat"
+  },
+  {
+    "externalId": 11014816,
+    "ovr": 96,
+    "firstName": "Julius",
+    "lastName": "Peppers",
+    "program": "Ranked",
+    "archetype": "LEDG - Speed Rusher"
+  },
+  {
+    "externalId": 11022247,
+    "ovr": 96,
+    "firstName": "Tariq",
+    "lastName": "Woolen",
+    "program": "Ranked",
+    "archetype": "CB - Zone"
+  }
+]

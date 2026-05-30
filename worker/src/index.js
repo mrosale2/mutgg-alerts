@@ -141,41 +141,100 @@ async function fetchOverallPricesBatch(externalIds) {
   return out;
 }
 
-// Paginate mut.gg's player-items endpoint and collect all auctionable cards
-// matching a filter. Optionally narrows by program name (substring, case-insensitive).
-async function discoverCandidates({ overallMin, overallMax, platform, programFilter }) {
-  const base = new URLSearchParams({
-    overall__gte: String(overallMin),
-    overall__lte: String(overallMax),
-    can_auction:  'true',
-  }).toString();
+// mut.gg's JSON API (/api/mutdb/player-items/) has a pagination bug: when range
+// filters like overall__gte/overall__lte are passed, every `page=N` returns the
+// same first 10 records (verified 2026-05-30). totalCount lies about retrievability.
+//
+// Their server-side rendered /players/ HTML pages DO paginate correctly. So we
+// scrape those instead. Each tile contains:
+//   - data-external-id="<id>"
+//   - player-list-item__score-value">  N  </ (OVR)
+//   - player-list-item__name-first">F</  /  __name-last">L</
+//   - player-list-item__program">Program Name</
+//   - player-list-item__archetype">Position - Archetype</
+//
+// The `market=` URL param maps platform: 1=Xbox Series X, 2=PS5, 3=PC. Without it,
+// the page renders blank prices but the metadata is the same; we still need it for
+// consistency with the user's chosen platform context.
+const MARKET_BY_PLATFORM = {
+  'pc':              '3',
+  'xbox-series-x':   '1',
+  'playstation-5':   '2',
+};
+
+function decodeEntities(s) {
+  if (!s) return s;
+  return s
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, h) => String.fromCharCode(parseInt(h, 16)))
+    .replace(/&#(\d+);/g, (_, d) => String.fromCharCode(Number(d)))
+    .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&apos;/g, "'");
+}
+
+function parsePlayerTiles(html) {
+  const tiles = [];
+  const tileRe = /<div class="player-list-item">([\s\S]*?)(?=<div class="player-list-item">|<\/main>|<\/section>|$)/g;
+  let m;
+  while ((m = tileRe.exec(html))) {
+    const body = m[1];
+    const idMatch     = body.match(/data-external-id="(\d+)"/);
+    const urlMatch    = body.match(/href="(\/players\/[^"]+\/26-\d+\/)"/);
+    const ovrMatch    = body.match(/player-list-item__score-value">\s*(\d+)/);
+    const firstMatch  = body.match(/player-list-item__name-first">\s*([^<]+?)\s*</);
+    const lastMatch   = body.match(/player-list-item__name-last\s*">\s*([^<]+?)\s*</);
+    const progMatch   = body.match(/player-list-item__program[^>]*>\s*([^<]+?)\s*</);
+    const archMatch   = body.match(/player-list-item__archetype[^>]*>\s*([^<]+?)\s*</);
+    if (!idMatch || !ovrMatch) continue;
+    tiles.push({
+      externalId: Number(idMatch[1]),
+      gameSlug:   '26',
+      url:        urlMatch ? urlMatch[1] : null,
+      ovr:        Number(ovrMatch[1]),
+      name:       decodeEntities((firstMatch?.[1] || '') + ' ' + (lastMatch?.[1] || '')).trim(),
+      program:    progMatch ? decodeEntities(progMatch[1]) : '?',
+      archetype:  archMatch ? decodeEntities(archMatch[1]).replace(/\s+/g, ' ').trim() : '',
+    });
+  }
+  return tiles;
+}
+
+// Paginate mut.gg's HTML /players/ index and collect all auctionable cards in the
+// given OVR range. Optionally narrows by program name (substring match).
+async function discoverCandidates({ overallMin, overallMax, platform, programFilter, excludePrograms }) {
+  const market = MARKET_BY_PLATFORM[platform] || '3';
+  const baseQS = `overall__gte=${overallMin}&overall__lte=${overallMax}&market=${market}`;
   const all = [];
-  let page = 1;
-  let total = Infinity;
-  while (all.length < total && page <= 50 /* safety cap */) {
-    const j = await fetchJson(`${MUTGG}/api/mutdb/player-items/?${base}&page=${page}`);
-    total = j.totalCount ?? all.length;
-    const items = (j.data || []).filter(p => p.canAuction);
-    for (const p of items) {
-      all.push({
-        externalId: p.externalId,
-        gameSlug:   p.gameSlug,
-        url:        p.url,
-        name:       `${p.firstName} ${p.lastName}`,
-        program:    p.program?.name || '?',
-        ovr:        p.overall,
+  const seen = new Set();
+  const MAX_PAGES = 60;  // safety cap; 471 cards @ 15/page = 32 pages, so 60 has headroom
+  for (let page = 1; page <= MAX_PAGES; page++) {
+    let html;
+    try {
+      const r = await fetch(`${MUTGG}/players/?${baseQS}&page=${page}`, {
+        headers: BROWSER_HEADERS,
       });
+      if (!r.ok) break;
+      html = await r.text();
+    } catch { break; }
+    const tiles = parsePlayerTiles(html);
+    if (!tiles.length) break;  // past last page
+    let newOnPage = 0;
+    for (const t of tiles) {
+      if (seen.has(t.externalId)) continue;
+      seen.add(t.externalId);
+      all.push(t);
+      newOnPage++;
     }
-    if (!items.length) break;
-    page++;
+    if (newOnPage === 0) break;  // page returned only dupes — past the end
   }
-  // Client-side program filter (mut.gg's program_id requires numeric ids we don't
-  // currently resolve; substring match on program name is good enough for ~hundreds).
-  if (programFilter) {
-    const pf = programFilter.toLowerCase().trim();
-    return all.filter(c => (c.program || '').toLowerCase().includes(pf));
-  }
-  return all;
+
+  // Filters: programFilter (substring include), excludePrograms (exact-name exclude list)
+  const pf = (programFilter || '').toLowerCase().trim();
+  const exclude = new Set((excludePrograms || []).map(p => p.toLowerCase()));
+  return all.filter(c => {
+    const prog = (c.program || '').toLowerCase();
+    if (pf && !prog.includes(pf)) return false;
+    if (exclude.has(prog)) return false;
+    return true;
+  });
 }
 
 // Effective target price for a watch given its current median. Supports two modes:
@@ -305,9 +364,9 @@ async function pollCardWatches(env, watches, ids, webhook) {
       (m, a) => (m == null || a.buyNowPrice < m.buyNowPrice) ? a : m,
       null
     );
-    if (liveAuctions.length === 0 && w.lastAlertedPrice != null) {
-      w.lastAlertedPrice = null;
-    }
+    // Strict-decrease rule: once we've alerted at a given price, never re-alert
+    // at the same price (or higher) — even if the card goes off-market and
+    // re-lists later. Only a strictly cheaper listing fires a new alert.
     const beatsPrior = cheapest && (w.lastAlertedPrice == null || cheapest.buyNowPrice < w.lastAlertedPrice);
     let fired = 0;
     if (beatsPrior) {
@@ -379,11 +438,10 @@ async function pollFilterWatch(env, watch, webhook) {
     );
     const prior = await loadLastAlerted(env, watch.id, cand.externalId);
 
-    // Re-arm if card is off-market entirely.
-    if (liveAuctions.length === 0 && prior != null) {
-      await clearLastAlerted(env, watch.id, cand.externalId);
-      return;
-    }
+    // Strict-decrease rule: only fire if the cheapest currently-live BIN is
+    // strictly less than our last alerted price for this candidate. No re-arm
+    // on off-market: if we've already alerted at 2.6M, never alert at 2.6M again
+    // even after the card disappears and re-lists.
     const beats = cheapest && (prior == null || cheapest.buyNowPrice < prior);
     if (!beats) return;
 
@@ -537,6 +595,13 @@ async function handleApi(req, env, url) {
     const targetMode    = body.targetMode === 'percent' ? 'percent' : 'absolute';
     const targetPercent = body.targetPercent == null ? null : Number(body.targetPercent);
     const programFilter = (body.programFilter || '').trim();
+    // excludePrograms: array of exact program-name strings (case-insensitive).
+    // Accepts either an array or a comma-separated string for convenience.
+    let excludePrograms = body.excludePrograms;
+    if (typeof excludePrograms === 'string') {
+      excludePrograms = excludePrograms.split(',').map(s => s.trim()).filter(Boolean);
+    }
+    if (!Array.isArray(excludePrograms)) excludePrograms = [];
     const recurring     = !!body.recurring;
     if (!Number.isFinite(overallMin) || !Number.isFinite(overallMax) || overallMin > overallMax) {
       return jsonResponse({ error: 'invalid overallMin/overallMax' }, { status: 400 });
@@ -555,13 +620,14 @@ async function handleApi(req, env, url) {
       : '';
     const id = `filter-${overallMin}-${overallMax}-${platform}${programSlug}`;
     const watches = await loadWatches(env);
-    const candidates = await discoverCandidates({ overallMin, overallMax, platform, programFilter });
+    const candidates = await discoverCandidates({ overallMin, overallMax, platform, programFilter, excludePrograms });
     await saveCandidates(env, id, candidates);
 
     watches[id] = {
       id, kind: 'filter',
       overallMin, overallMax, platform,
       programFilter,
+      excludePrograms,
       targetMode,
       targetBin:     Number.isFinite(targetBin)     ? targetBin     : null,
       targetPercent: Number.isFinite(targetPercent) ? targetPercent : null,
@@ -588,6 +654,7 @@ async function handleApi(req, env, url) {
     const candidates = await discoverCandidates({
       overallMin: w.overallMin, overallMax: w.overallMax, platform: w.platform,
       programFilter: w.programFilter,
+      excludePrograms: w.excludePrograms,
     });
     await saveCandidates(env, id, candidates);
     w.candidateCount = candidates.length;
@@ -719,6 +786,7 @@ async function refreshAllFilterCandidates(env) {
       const candidates = await discoverCandidates({
         overallMin: w.overallMin, overallMax: w.overallMax, platform: w.platform,
         programFilter: w.programFilter,
+        excludePrograms: w.excludePrograms,
       });
       await saveCandidates(env, id, candidates);
       updates[id] = {
@@ -902,11 +970,17 @@ button.tab.on { background:#1a2229; color:#e7e9ea; border-color:#3FA9F5; }
     <div class="row" style="gap:12px; margin-top:10px;">
       <div style="flex:2;">
         <label>Program filter (optional)</label>
-        <input id="ff-program" placeholder="e.g. Sugar Rush — leave blank for all programs" autocomplete="off">
+        <input id="ff-program" placeholder="e.g. Sugar Rush — only watch this program" autocomplete="off">
       </div>
       <div style="display:flex; flex-direction:column;">
         <label>Recurring</label>
         <button id="ff-recurring" class="pill on" type="button">Yes</button>
+      </div>
+    </div>
+    <div class="row" style="gap:12px; margin-top:10px;">
+      <div style="flex:1;">
+        <label>Exclude programs (optional, comma-separated)</label>
+        <input id="ff-exclude" placeholder="e.g. Ultimate Legends, Tribute, TOTW" autocomplete="off">
       </div>
     </div>
     <div class="row" style="gap:12px; margin-top:10px;">
@@ -1077,7 +1151,8 @@ $('#btn-add-filter').onclick = async () => {
   const overallMin = parseInt($('#ff-min').value, 10);
   const overallMax = parseInt($('#ff-max').value, 10);
   const platform   = $('#ff-platform').value;
-  const programFilter = $('#ff-program').value;
+  const programFilter   = $('#ff-program').value;
+  const excludePrograms = ($('#ff-exclude').value || '').split(',').map(s => s.trim()).filter(Boolean);
   const mode      = $('#ff-mode').value;
   const targetBin = parseInt(($('#ff-target').value  || '').replace(/[^\\d]/g,''), 10);
   const percent   = parseInt(($('#ff-percent').value || '').replace(/[^\\d]/g,''), 10);
@@ -1096,6 +1171,7 @@ $('#btn-add-filter').onclick = async () => {
     const r = await api('/api/watches/filter', { method: 'POST', body: JSON.stringify({
       overallMin, overallMax, platform,
       programFilter,
+      excludePrograms,
       targetMode: mode,
       targetBin:     mode === 'absolute' ? targetBin : null,
       targetPercent: mode === 'percent'  ? percent   : null,
@@ -1103,7 +1179,7 @@ $('#btn-add-filter').onclick = async () => {
     })});
     status.className = 'status ok';
     status.textContent = 'Added. ' + r.watch.candidateCount + ' candidate cards will rotate through polling.';
-    $('#ff-min').value = ''; $('#ff-max').value = ''; $('#ff-target').value = ''; $('#ff-percent').value = ''; $('#ff-program').value = '';
+    $('#ff-min').value = ''; $('#ff-max').value = ''; $('#ff-target').value = ''; $('#ff-percent').value = ''; $('#ff-program').value = ''; $('#ff-exclude').value = '';
     refresh();
   } catch (e) { status.className = 'status err'; status.textContent = 'Failed: ' + e.message; }
 };
@@ -1147,6 +1223,9 @@ async function refresh() {
         (w.candidateCount ?? '?') + ' candidate cards',
       ];
       if (w.programFilter) subParts.push('program: ' + w.programFilter);
+      if (w.excludePrograms && w.excludePrograms.length) {
+        subParts.push('excluding: ' + w.excludePrograms.join(', '));
+      }
       card.innerHTML = \`
         <div class="ovr">\${w.overallMin}–\${w.overallMax}</div>
         <div>
@@ -1171,6 +1250,7 @@ async function refresh() {
         await api('/api/watches/filter', { method: 'POST', body: JSON.stringify({
           overallMin: w.overallMin, overallMax: w.overallMax, platform: w.platform,
           programFilter: w.programFilter || '',
+          excludePrograms: w.excludePrograms || [],
           targetMode: w.targetMode || 'absolute',
           targetBin: w.targetBin, targetPercent: w.targetPercent,
           recurring: !w.recurring,
