@@ -592,46 +592,67 @@ async function handleApi(req, env, url) {
 
   // Create a filter watch (OVR range across all matching cards).
   // Discovery is synchronous so the user knows immediately how many candidates exist.
+  // PARTIAL-UPDATE SEMANTICS: when an existing watch is being edited (e.g. target
+  // change), fields NOT present in the request body are preserved from the existing
+  // record. This prevents the UI form (which has no input for excludeExternalIds)
+  // from wiping out per-card exclusions every time the user tweaks a target.
   if (req.method === 'POST' && path === '/api/watches/filter') {
     const body = await req.json();
     const overallMin = Number(body.overallMin);
     const overallMax = Number(body.overallMax);
     const platform   = body.platform;
-    const targetBin     = body.targetBin == null ? null : Number(body.targetBin);
-    const targetMode    = body.targetMode === 'percent' ? 'percent' : 'absolute';
-    const targetPercent = body.targetPercent == null ? null : Number(body.targetPercent);
-    const programFilter = (body.programFilter || '').trim();
-    // excludePrograms: array of exact program-name strings (case-insensitive).
-    // Accepts either an array or a comma-separated string for convenience.
-    let excludePrograms = body.excludePrograms;
-    if (typeof excludePrograms === 'string') {
-      excludePrograms = excludePrograms.split(',').map(s => s.trim()).filter(Boolean);
-    }
-    if (!Array.isArray(excludePrograms)) excludePrograms = [];
-    let excludeExternalIds = body.excludeExternalIds;
-    if (typeof excludeExternalIds === 'string') {
-      excludeExternalIds = excludeExternalIds.split(/[,\s]+/).map(Number).filter(Number.isFinite);
-    }
-    if (!Array.isArray(excludeExternalIds)) excludeExternalIds = [];
-    excludeExternalIds = excludeExternalIds.map(Number).filter(Number.isFinite);
-    const recurring     = !!body.recurring;
+
+    // We can't look up the existing watch yet (we don't have its id), so compute id
+    // and load watches FIRST, then merge.
     if (!Number.isFinite(overallMin) || !Number.isFinite(overallMax) || overallMin > overallMax) {
       return jsonResponse({ error: 'invalid overallMin/overallMax' }, { status: 400 });
     }
     if (!platform) return jsonResponse({ error: 'missing platform' }, { status: 400 });
+
+    const watches = await loadWatches(env);
+    // We need programFilter to compute the id. If absent in body, fall back to nothing
+    // — we'll re-key from the existing watch found below if the user is editing.
+    const bodyProgramFilter = 'programFilter' in body ? String(body.programFilter || '').trim() : null;
+    const tentativeProgramSlug = bodyProgramFilter
+      ? '-' + bodyProgramFilter.replace(/\W+/g, '_').toLowerCase()
+      : '';
+    const tentativeId = `filter-${overallMin}-${overallMax}-${platform}${tentativeProgramSlug}`;
+    // If the user is editing an existing watch by passing programFilter explicitly,
+    // tentativeId might point to a DIFFERENT existing watch (or none). For now we trust
+    // the tentativeId — the recurring-toggle path passes the watch's existing fields back.
+    const existing = watches[tentativeId];
+
+    // PRESERVE: each field falls back to the existing watch's value if the body omits it.
+    const targetMode    = body.targetMode === 'percent' ? 'percent'
+                         : body.targetMode === 'absolute' ? 'absolute'
+                         : (existing?.targetMode || 'absolute');
+    const targetBin     = 'targetBin'     in body && body.targetBin     != null ? Number(body.targetBin)     : (existing?.targetBin     ?? null);
+    const targetPercent = 'targetPercent' in body && body.targetPercent != null ? Number(body.targetPercent) : (existing?.targetPercent ?? null);
+
+    const programFilter = bodyProgramFilter != null ? bodyProgramFilter : (existing?.programFilter || '');
+
+    function parseList(v, isNum) {
+      if (typeof v === 'string') return v.split(isNum ? /[,\s]+/ : ',').map(s => isNum ? Number(s) : s.trim()).filter(Boolean).filter(x => !isNum || Number.isFinite(x));
+      if (Array.isArray(v)) return v.map(x => isNum ? Number(x) : x).filter(x => !isNum || Number.isFinite(x));
+      return null;
+    }
+    const bodyExcludePrograms    = 'excludePrograms'    in body ? parseList(body.excludePrograms,    false) : null;
+    const bodyExcludeExternalIds = 'excludeExternalIds' in body ? parseList(body.excludeExternalIds,  true) : null;
+    const excludePrograms    = bodyExcludePrograms    || existing?.excludePrograms    || [];
+    const excludeExternalIds = bodyExcludeExternalIds || existing?.excludeExternalIds || [];
+
+    const recurring = 'recurring' in body ? !!body.recurring : (existing?.recurring ?? true);
+
     if (targetMode === 'absolute' && !Number.isFinite(targetBin)) {
       return jsonResponse({ error: 'missing targetBin' }, { status: 400 });
     }
     if (targetMode === 'percent' && !Number.isFinite(targetPercent)) {
       return jsonResponse({ error: 'missing targetPercent' }, { status: 400 });
     }
-
-    // Different programs are different watches, so include programFilter in the id.
-    const programSlug = programFilter
-      ? '-' + programFilter.replace(/\W+/g, '_').toLowerCase()
-      : '';
-    const id = `filter-${overallMin}-${overallMax}-${platform}${programSlug}`;
-    const watches = await loadWatches(env);
+    if (!Number.isFinite(overallMin) || !Number.isFinite(overallMax) || overallMin > overallMax) {
+      return jsonResponse({ error: 'invalid overallMin/overallMax' }, { status: 400 });
+    }
+    const id = tentativeId;
     const candidates = await discoverCandidates({ overallMin, overallMax, platform, programFilter, excludePrograms, excludeExternalIds });
     await saveCandidates(env, id, candidates);
 
@@ -648,11 +669,11 @@ async function handleApi(req, env, url) {
       candidateCount: candidates.length,
       candidatesUpdatedAt: Date.now(),
       cursor: 0,
-      lastChecked: 0,
+      lastChecked: existing?.lastChecked || 0,
       lastError: null,
-      lastAlertedAt: watches[id]?.lastAlertedAt || null,
-      lastAlertedName: watches[id]?.lastAlertedName || null,
-      lastAlertedPrice: watches[id]?.lastAlertedPrice || null,
+      lastAlertedAt: existing?.lastAlertedAt || null,
+      lastAlertedName: existing?.lastAlertedName || null,
+      lastAlertedPrice: existing?.lastAlertedPrice || null,
     };
     await saveWatches(env, watches);
     return jsonResponse({ ok: true, watch: watches[id] });
