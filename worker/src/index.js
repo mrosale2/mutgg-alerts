@@ -41,21 +41,16 @@ const BROWSER_HEADERS = {
 };
 
 async function fetchJson(url, init = {}) {
-  // Per-status retry delays. 429 (rate limit) gets longer backoff than generic
-  // transient errors; mut.gg may also send Retry-After which we'll honor if present.
-  const BASE_DELAYS_MS = [0, 2000, 5000];      // for 403/5xx
-  const RATE_DELAYS_MS = [0, 12000, 30000];    // for 429 — bigger backoff
-  const RETRY_STATUSES  = new Set([403, 429, 500, 502, 503, 504]);
+  // Retry policy is tight on purpose: cron invocations have a hard time budget,
+  // and rate-limit retries can eat minutes of wall time. We let the sweep
+  // rotation catch a card NEXT cycle instead of burning the current tick.
+  //   - 429 (rate limit): no retry. Skip and move on.
+  //   - 403/5xx (transient): 1 retry after 2s.
+  const BASE_DELAYS_MS = [0, 2000];   // 2 attempts total for non-rate-limit errors
+  const RETRY_STATUSES = new Set([403, 500, 502, 503, 504]);
   let lastErr;
-  let nextStatus = null;
-  let retryAfterMs = 0;
   for (let attempt = 0; attempt < BASE_DELAYS_MS.length; attempt++) {
-    const baseDelay = nextStatus === 429
-      ? RATE_DELAYS_MS[attempt]
-      : BASE_DELAYS_MS[attempt];
-    const wait = Math.max(baseDelay, retryAfterMs);
-    if (wait > 0) await new Promise(res => setTimeout(res, wait));
-    retryAfterMs = 0;
+    if (BASE_DELAYS_MS[attempt] > 0) await new Promise(res => setTimeout(res, BASE_DELAYS_MS[attempt]));
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), POLL_TIMEOUT_MS);
     try {
@@ -65,14 +60,13 @@ async function fetchJson(url, init = {}) {
         headers: { ...BROWSER_HEADERS, ...(init.headers || {}) },
       });
       if (r.ok) return await r.json();
+      // 429 fast-fail: don't retry inside the cron tick. The card will get
+      // re-polled on the next sweep rotation.
+      if (r.status === 429) {
+        throw new Error(`${url}: HTTP 429`);
+      }
       if (!RETRY_STATUSES.has(r.status)) {
         throw new Error(`${url}: HTTP ${r.status}`);
-      }
-      nextStatus = r.status;
-      const ra = r.headers.get('retry-after');
-      if (ra) {
-        const sec = Number(ra);
-        if (Number.isFinite(sec)) retryAfterMs = sec * 1000;
       }
       lastErr = new Error(`${url}: HTTP ${r.status} (attempt ${attempt + 1})`);
     } catch (e) {
@@ -291,34 +285,42 @@ async function clearLastAlerted(env, watchId, externalId) {
 // ---------- Discord ----------
 
 async function postDiscord(webhook, { title, body, url, color = 0x1f5b3a, fields = [] }) {
-  const payload = {
-    embeds: [{
-      title,
-      description: body,
-      url: url || undefined,
-      color,
-      fields,
-      timestamp: new Date().toISOString(),
-      footer: { text: 'mut.gg auction alerts' },
-    }],
-  };
-  const r = await fetch(webhook, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  });
-  return r.ok || r.status === 204;
+  // Never throw — Discord flakiness shouldn't kill the cron tick. Return false on
+  // any failure so callers can detect it without try/catch boilerplate.
+  try {
+    const payload = {
+      embeds: [{
+        title,
+        description: body,
+        url: url || undefined,
+        color,
+        fields,
+        timestamp: new Date().toISOString(),
+        footer: { text: 'mut.gg auction alerts' },
+      }],
+    };
+    const r = await fetch(webhook, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    return r.ok || r.status === 204;
+  } catch (e) {
+    console.log('postDiscord error (swallowed):', e.message);
+    return false;
+  }
 }
 
 // ---------- cron: poll & alert ----------
 
 // Filter-watch poll tuning.
-// Bursting (100 in parallel) gets us 429'd; sustained low rate doesn't. With
-// concurrency=5 and chunk=100, we spread 100 requests over ~20 sec at ~5 req/sec
-// sustained — well below mut.gg's threshold. Sweep wall-clock for 400 candidates
-// drops to ~4 min vs. ~16 min at the previous 25/tick.
-const FILTER_CHUNK_SIZE = 100;
-const FILTER_CONCURRENCY = 5;
+// Lower than ideal but tuned to fit Cloudflare's cron invocation time budget.
+// Larger chunks risk timeout when mut.gg 429s us — observed ~20+ min wall time
+// during high-rate-limit periods at chunk=100 + 429-retries, causing the worker
+// to be killed mid-execution without saving state.
+// At 25/tick, 471-candidate sweep = ~20 min. Slower but reliable.
+const FILTER_CHUNK_SIZE = 25;
+const FILTER_CONCURRENCY = 3;
 
 async function pollCardWatches(env, watches, ids, webhook) {
   const results = [];
@@ -342,6 +344,7 @@ async function pollCardWatches(env, watches, ids, webhook) {
 
   for (const id of ids) {
     const w = watches[id];
+    try {
     const fetched = liveByKey.get(keyOf(w));
     if (fetched.error) {
       w.lastError = fetched.error;
@@ -396,6 +399,13 @@ async function pollCardWatches(env, watches, ids, webhook) {
     w.lastChecked = Date.now();
     w.lastError = null;
     results.push({ id, name: w.name, matches: matches.length, cheapest: cheapest?.buyNowPrice ?? null, fired });
+    } catch (e) {
+      // Per-watch defense — never let one bad watch break the whole sweep.
+      console.log('[pollCardWatches] err on', w?.name, ':', e.message);
+      w.lastError = e.message;
+      w.lastChecked = Date.now();
+      results.push({ id, name: w?.name, error: e.message });
+    }
   }
   return { results, uniqueFetches: uniqueKeys.length };
 }
@@ -423,52 +433,57 @@ async function pollFilterWatch(env, watch, webhook) {
 
   let fired = 0;
   const failures = [];
+  // Wrap the entire per-candidate body in try/catch so KV errors, postDiscord
+  // errors, or any other unexpected throw can't kill the whole sweep tick.
+  // We MUST finish the chunk and reach saveWatches no matter what.
   await mapWithConcurrency(chunk, FILTER_CONCURRENCY, async cand => {
-    let liveAuctions;
     try {
-      ({ liveAuctions } = await fetchLiveAuctions(cand.gameSlug, cand.externalId, watch.platform));
+      let liveAuctions;
+      try {
+        ({ liveAuctions } = await fetchLiveAuctions(cand.gameSlug, cand.externalId, watch.platform));
+      } catch (e) {
+        failures.push(`${cand.name}: ${e.message}`);
+        return;
+      }
+      const med = medianByExternalId.get(cand.externalId)?.price?.[watch.platform] ?? null;
+      const target = effectiveTarget(watch, med);
+      // If percent-of-median is requested but we have no median, skip this candidate
+      // (otherwise we'd fall back to targetBin which may be wrong/unset).
+      if (watch.targetMode === 'percent' && target == null) return;
+
+      const matches = liveAuctions.filter(a => a.buyNowPrice != null && a.buyNowPrice <= target);
+      const cheapest = matches.reduce(
+        (m, a) => (m == null || a.buyNowPrice < m.buyNowPrice) ? a : m,
+        null
+      );
+      const prior = await loadLastAlerted(env, watch.id, cand.externalId);
+
+      // Strict-decrease rule: only fire if the cheapest currently-live BIN is
+      // strictly less than our last alerted price for this candidate.
+      const beats = cheapest && (prior == null || cheapest.buyNowPrice < prior);
+      if (!beats) return;
+
+      const targetLabel = watch.targetMode === 'percent'
+        ? `≤ ${watch.targetPercent}% under median (${fmt(target)})`
+        : fmt(target);
+      await postDiscord(webhook, {
+        title: `🎯 ${cand.name} (${cand.program}) ${cand.ovr} OVR — ${PLATFORMS[watch.platform] || watch.platform}`,
+        body: `**BIN ${fmt(cheapest.buyNowPrice)}** · target ${targetLabel}${med != null ? ` · median ${fmt(med)}` : ''}\nFilter \`${watch.overallMin}-${watch.overallMax} OVR${watch.programFilter ? ' · ' + watch.programFilter : ''}\` · ends <t:${Math.floor(new Date(cheapest.endDate).getTime()/1000)}:R>${matches.length > 1 ? `\n*+${matches.length - 1} other listing(s) below target*` : ''}`,
+        url: `${MUTGG}${cand.url}#prices`,
+        color: 0xF5C518,
+        fields: [
+          { name: 'Bids',  value: String(cheapest.bidCount ?? 0), inline: true },
+          { name: 'Recur', value: watch.recurring ? 'Yes' : 'No', inline: true },
+        ],
+      });
+      await saveLastAlerted(env, watch.id, cand.externalId, cheapest.buyNowPrice);
+      fired++;
+      watch.lastAlertedAt = Date.now();
+      watch.lastAlertedName = cand.name;
+      watch.lastAlertedPrice = cheapest.buyNowPrice;
     } catch (e) {
       failures.push(`${cand.name}: ${e.message}`);
-      return;
     }
-    const med = medianByExternalId.get(cand.externalId)?.price?.[watch.platform] ?? null;
-    const target = effectiveTarget(watch, med);
-    // If percent-of-median is requested but we have no median, skip this candidate
-    // (otherwise we'd fall back to targetBin which may be wrong/unset).
-    if (watch.targetMode === 'percent' && target == null) return;
-
-    const matches = liveAuctions.filter(a => a.buyNowPrice != null && a.buyNowPrice <= target);
-    const cheapest = matches.reduce(
-      (m, a) => (m == null || a.buyNowPrice < m.buyNowPrice) ? a : m,
-      null
-    );
-    const prior = await loadLastAlerted(env, watch.id, cand.externalId);
-
-    // Strict-decrease rule: only fire if the cheapest currently-live BIN is
-    // strictly less than our last alerted price for this candidate. No re-arm
-    // on off-market: if we've already alerted at 2.6M, never alert at 2.6M again
-    // even after the card disappears and re-lists.
-    const beats = cheapest && (prior == null || cheapest.buyNowPrice < prior);
-    if (!beats) return;
-
-    const targetLabel = watch.targetMode === 'percent'
-      ? `≤ ${watch.targetPercent}% under median (${fmt(target)})`
-      : fmt(target);
-    await postDiscord(webhook, {
-      title: `🎯 ${cand.name} (${cand.program}) ${cand.ovr} OVR — ${PLATFORMS[watch.platform] || watch.platform}`,
-      body: `**BIN ${fmt(cheapest.buyNowPrice)}** · target ${targetLabel}${med != null ? ` · median ${fmt(med)}` : ''}\nFilter \`${watch.overallMin}-${watch.overallMax} OVR${watch.programFilter ? ' · ' + watch.programFilter : ''}\` · ends <t:${Math.floor(new Date(cheapest.endDate).getTime()/1000)}:R>${matches.length > 1 ? `\n*+${matches.length - 1} other listing(s) below target*` : ''}`,
-      url: `${MUTGG}${cand.url}#prices`,
-      color: 0xF5C518,
-      fields: [
-        { name: 'Bids',  value: String(cheapest.bidCount ?? 0), inline: true },
-        { name: 'Recur', value: watch.recurring ? 'Yes' : 'No', inline: true },
-      ],
-    });
-    await saveLastAlerted(env, watch.id, cand.externalId, cheapest.buyNowPrice);
-    fired++;
-    watch.lastAlertedAt = Date.now();
-    watch.lastAlertedName = cand.name;
-    watch.lastAlertedPrice = cheapest.buyNowPrice;
   });
 
   watch.cursor = nextCursor;
@@ -930,12 +945,19 @@ async function refreshAllFilterCandidates(env) {
 
 export default {
   async scheduled(event, env, ctx) {
+    console.log('[scheduled] fired cron=' + event.cron + ' scheduledTime=' + new Date(event.scheduledTime).toISOString());
     // Multiple cron schedules — dispatch by event.cron string.
     if (event.cron === '0 8 * * *') {
-      ctx.waitUntil(refreshAllFilterCandidates(env));
+      ctx.waitUntil(refreshAllFilterCandidates(env).then(
+        r => console.log('[scheduled] refresh result:', JSON.stringify(r)),
+        e => console.log('[scheduled] refresh ERROR:', e.message, e.stack)
+      ));
     } else {
       // Default: the per-minute poll loop.
-      ctx.waitUntil(pollOnce(env));
+      ctx.waitUntil(pollOnce(env).then(
+        r => console.log('[scheduled] poll result polled=' + r.polled + ' filters=' + (r.filters ? r.filters.length : 0)),
+        e => console.log('[scheduled] poll ERROR:', e.message, e.stack)
+      ));
     }
   },
   async fetch(req, env) {
