@@ -60,6 +60,8 @@ async function fetchJson(url, init = {}) {
         headers: { ...BROWSER_HEADERS, ...(init.headers || {}) },
       });
       if (r.ok) return await r.json();
+      // Drain the error body so Cloudflare doesn't warn about stalled responses.
+      try { await r.body?.cancel(); } catch {}
       // 429 fast-fail: don't retry inside the cron tick. The card will get
       // re-polled on the next sweep rotation.
       if (r.status === 429) {
@@ -124,14 +126,18 @@ async function fetchOverallPricesBatch(externalIds) {
   const CHUNK = 25;
   const groups = [];
   for (let i = 0; i < externalIds.length; i += CHUNK) groups.push(externalIds.slice(i, i + CHUNK));
-  await Promise.all(groups.map(async ids => {
+  // mapWithConcurrency, not Promise.all: Cloudflare Workers limit concurrent
+  // HTTP requests per invocation. Firing 19+ batches in parallel triggers
+  // "stalled HTTP response was canceled to prevent deadlock" — and the canceled
+  // responses come back as throws, leaving the result map empty.
+  await mapWithConcurrency(groups, 3, async ids => {
     try {
       const j = await fetchJson(`${MUTGG}/api/mutdb/prices/overall/playeritem/?external_ids=${ids.join(',')}`);
       for (const entry of (j.data || [])) {
         if (entry.externalId != null) out.set(entry.externalId, entry);
       }
     } catch {/* swallow — median is non-critical */}
-  }));
+  });
   return out;
 }
 
@@ -313,14 +319,21 @@ async function postDiscord(webhook, { title, body, url, color = 0x1f5b3a, fields
 
 // ---------- cron: poll & alert ----------
 
-// Filter-watch poll tuning.
-// Lower than ideal but tuned to fit Cloudflare's cron invocation time budget.
-// Larger chunks risk timeout when mut.gg 429s us — observed ~20+ min wall time
-// during high-rate-limit periods at chunk=100 + 429-retries, causing the worker
-// to be killed mid-execution without saving state.
-// At 25/tick, 471-candidate sweep = ~20 min. Slower but reliable.
-const FILTER_CHUNK_SIZE = 25;
-const FILTER_CONCURRENCY = 3;
+// Filter-watch poll tuning. Tuned tight after observing mut.gg rate-limit us
+// hard (~85% of fetches 429ing) when running at chunk=25 concurrency=3 after
+// extended testing. Backed off to chunk=10 concurrency=2 to let their rate
+// limit window cool. Sweep at this rate: 471/10 = ~47 min full cycle.
+const FILTER_CHUNK_SIZE = 10;
+const FILTER_CONCURRENCY = 2;
+
+// Smart-polling tuning. Tier 1 (batch overall-prices, 25 ids per fetch) scans
+// every candidate per tick. Tier 2 (per-card live auctions) drills into changes.
+// Drill cap protects the CPU budget when many cards change at once (e.g. after
+// a content drop or after a long outage).
+const SMART_BATCH_SIZE       = 25;   // mut.gg's batch endpoint accepts up to 25 ids per query
+const SMART_BATCH_CONCURRENCY = 3;   // parallel batch fetches
+const MAX_DRILL_PER_TICK     = 30;   // hard cap on per-card live-auction fetches
+const DRILL_CONCURRENCY      = 3;    // parallel drill-downs
 
 async function pollCardWatches(env, watches, ids, webhook) {
   const results = [];
@@ -500,6 +513,139 @@ async function pollFilterWatch(env, watch, webhook) {
   };
 }
 
+// Two-tier "smart" polling — EXPERIMENTAL, NOT WIRED INTO pollOnce.
+//
+// Tried as an optimization over per-card sweep: a cheap batch endpoint scans all
+// candidates per tick, and only changed cards get an expensive per-card drill.
+// Theory was sound: batch endpoint returns lastUpdated.<platform> per card, so
+// we could short-circuit polls on cards with no fresh data.
+//
+// BUT: mut.gg's rate limiter applies to the batch overall-prices endpoint just
+// as aggressively as the per-card endpoint. Firing 19 batches per minute trips
+// 429s on every one of them, leaving the result Map empty and reverting to a
+// degenerate first-run state every cycle. With no way to outrun the rate limit,
+// this architecture buys nothing.
+//
+// Kept as documentation of what was tried + as scaffolding for a future variant
+// that runs the batch fetch less frequently (e.g., every 5-10 minutes). See
+// commit history for the experiment.
+async function pollFilterWatchSmart(env, watch, webhook) {
+  const candidates = await loadCandidates(env, watch.id);
+  if (!candidates || candidates.length === 0) {
+    watch.lastError = 'no candidates cached — refresh via /api/watches/:id/refresh';
+    watch.lastChecked = Date.now();
+    return { id: watch.id, skipped: 'no candidates' };
+  }
+
+  // TIER 1: batch-fetch overall-prices for every candidate.
+  // Returns Map keyed by externalId, each entry has { price, lastUpdated, ... } per platform.
+  const allIds = candidates.map(c => c.externalId);
+  const overallByExternalId = await fetchOverallPricesBatch(allIds);
+
+  // First-run detection: if NO candidate has a stored lastUpdatedSeen, this is
+  // either the watch's very first poll or a fresh re-discover. Just record the
+  // current timestamps and exit — drilling every card would blow the CPU budget.
+  // From the next tick onward, only actual changes trigger drills.
+  const hasAnyPriorTs = candidates.some(c => c.lastUpdatedSeen);
+  if (!hasAnyPriorTs) {
+    for (const cand of candidates) {
+      const entry = overallByExternalId.get(cand.externalId);
+      if (entry) cand.lastUpdatedSeen = entry.lastUpdated?.[watch.platform] || null;
+    }
+    await saveCandidates(env, watch.id, candidates);
+    watch.lastChecked = Date.now();
+    watch.lastError = null;
+    return { id: watch.id, initialRun: true, recorded: candidates.length };
+  }
+
+  // Identify candidates whose lastUpdated.<platform> advanced since we last saw.
+  const changed = [];
+  for (const cand of candidates) {
+    const entry = overallByExternalId.get(cand.externalId);
+    if (!entry) continue;
+    const newTs = entry.lastUpdated?.[watch.platform];
+    if (!newTs) continue;   // mut.gg has no platform data for this card
+    if (newTs !== cand.lastUpdatedSeen) {
+      changed.push({ cand, newTs, overall: entry });
+    }
+  }
+
+  // TIER 2: drill down on changed cards, capped to MAX_DRILL_PER_TICK.
+  // If more cards changed than the cap, the leftovers stay "changed" and get
+  // picked up on subsequent ticks (since we only mark lastUpdatedSeen on drill).
+  const drillSet = changed.slice(0, MAX_DRILL_PER_TICK);
+  const overflow = changed.length - drillSet.length;
+  let fired = 0;
+  const failures = [];
+
+  await mapWithConcurrency(drillSet, DRILL_CONCURRENCY, async ({ cand, newTs, overall }) => {
+    try {
+      let liveAuctions;
+      try {
+        ({ liveAuctions } = await fetchLiveAuctions(cand.gameSlug, cand.externalId, watch.platform));
+      } catch (e) {
+        failures.push(`${cand.name}: ${e.message}`);
+        return;
+      }
+      const med = overall.price?.[watch.platform] ?? null;
+      const target = effectiveTarget(watch, med);
+      if (watch.targetMode === 'percent' && target == null) {
+        // Mark seen even though we skipped (no median to compute %-target from).
+        cand.lastUpdatedSeen = newTs;
+        return;
+      }
+      const matches = liveAuctions.filter(a => a.buyNowPrice != null && a.buyNowPrice <= target);
+      const cheapest = matches.reduce((m, a) => (m == null || a.buyNowPrice < m.buyNowPrice) ? a : m, null);
+      const prior = await loadLastAlerted(env, watch.id, cand.externalId);
+
+      // Strict-decrease rule (no re-arm on off-market).
+      const beats = cheapest && (prior == null || cheapest.buyNowPrice < prior);
+      if (beats) {
+        const targetLabel = watch.targetMode === 'percent'
+          ? `≤ ${watch.targetPercent}% under median (${fmt(target)})`
+          : fmt(target);
+        await postDiscord(webhook, {
+          title: `🎯 ${cand.name} (${cand.program}) ${cand.ovr} OVR — ${PLATFORMS[watch.platform] || watch.platform}`,
+          body: `**BIN ${fmt(cheapest.buyNowPrice)}** · target ${targetLabel}${med != null ? ` · median ${fmt(med)}` : ''}\nFilter \`${watch.overallMin}-${watch.overallMax} OVR${watch.programFilter ? ' · ' + watch.programFilter : ''}\` · ends <t:${Math.floor(new Date(cheapest.endDate).getTime()/1000)}:R>${matches.length > 1 ? `\n*+${matches.length - 1} other listing(s) below target*` : ''}`,
+          url: `${MUTGG}${cand.url}#prices`,
+          color: 0xF5C518,
+          fields: [
+            { name: 'Bids',  value: String(cheapest.bidCount ?? 0), inline: true },
+            { name: 'Recur', value: watch.recurring ? 'Yes' : 'No', inline: true },
+          ],
+        });
+        await saveLastAlerted(env, watch.id, cand.externalId, cheapest.buyNowPrice);
+        fired++;
+        watch.lastAlertedAt = Date.now();
+        watch.lastAlertedName = cand.name;
+        watch.lastAlertedPrice = cheapest.buyNowPrice;
+      }
+      // Mark this candidate as up-to-date through `newTs`. If we DIDN'T drill
+      // (overflow case), we leave the prior lastUpdatedSeen alone so the next
+      // tick still treats it as changed.
+      cand.lastUpdatedSeen = newTs;
+    } catch (e) {
+      failures.push(`${cand.name}: ${e.message}`);
+    }
+  });
+
+  // Persist updated candidate timestamps. KV write is one blob (~70-80 KB).
+  await saveCandidates(env, watch.id, candidates);
+  watch.lastChecked = Date.now();
+  watch.lastError = failures.length
+    ? failures.slice(0, 2).join('; ') + (failures.length > 2 ? ` (+${failures.length - 2} more)` : '')
+    : null;
+
+  return {
+    id: watch.id,
+    changedTotal: changed.length,
+    drilled: drillSet.length,
+    overflow,
+    fired,
+    failures: failures.length,
+  };
+}
+
 // Fields that the polling loop updates on a watch. When we merge poll output back
 // into KV, ONLY these fields override the latest stored state — everything else
 // (target price, recurring, the watch's existence itself) reflects user edits
@@ -526,6 +672,10 @@ async function pollOnce(env) {
 
   const filterResults = [];
   for (const id of filterIds) {
+    // Note: tried pollFilterWatchSmart (two-tier batch+drill polling) but mut.gg
+    // rate-limits the batch overall-prices endpoint too, so the strategy fails
+    // (429s on every batch fetch). Sticking with per-card sweep as the reliable
+    // path. See commit history for the experiment.
     filterResults.push(await pollFilterWatch(env, watches[id], webhook));
   }
 
